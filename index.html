@@ -1,0 +1,4601 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ACH Project</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+<style>
+/* =========================================================
+   ACH Project — Interactive Executive Design System
+   Formal · Monochromatic Dark · Physics-informed motion
+   ========================================================= */
+:root {
+  --bg: #0A0A0B;
+  --bg-elevated: #111113;
+  --bg-mesh:
+    radial-gradient(ellipse 90% 70% at 12% 8%, rgba(196, 168, 106, 0.07), transparent 55%),
+    radial-gradient(ellipse 70% 55% at 88% 92%, rgba(140, 150, 170, 0.05), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 45%, rgba(255,255,255,0.015), transparent);
+
+  --surface: rgba(22, 22, 26, 0.62);
+  --surface-solid: rgba(18, 18, 22, 0.88);
+  --surface-2: rgba(32, 32, 38, 0.72);
+  --surface-3: rgba(42, 42, 50, 0.88);
+  --glass: rgba(28, 28, 34, 0.48);
+  --glass-border: rgba(255, 255, 255, 0.07);
+  --glass-highlight: rgba(255, 255, 255, 0.1);
+
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+
+  --text: #F2F0EB;
+  --text-muted: #9A9690;
+  --text-faint: #5C5954;
+
+  --brand: #C4A86A;
+  --brand-hover: #D4BC82;
+  --brand-tint: rgba(196, 168, 106, 0.14);
+  --brand-glow: rgba(196, 168, 106, 0.28);
+  --input-c: #8BA3C7;
+  --output-c: #7A9E7E;
+  --danger: #C45C54;
+
+  --radius-xl: 28px;
+  --radius-lg: 20px;
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --shadow-sm: 0 2px 12px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.25);
+  --shadow-md: 0 16px 48px rgba(0,0,0,0.45), 0 6px 16px rgba(0,0,0,0.3);
+  --shadow-lg: 0 28px 70px rgba(0,0,0,0.55), 0 10px 28px rgba(0,0,0,0.35);
+  --shadow-float: 0 36px 90px rgba(0,0,0,0.6), 0 14px 36px rgba(0,0,0,0.4);
+  --shadow-glass: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+
+  --ease-spring: cubic-bezier(0.22, 1.2, 0.36, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-heavy: cubic-bezier(0.25, 0.8, 0.25, 1);
+  --blur: blur(40px) saturate(140%);
+  --blur-heavy: blur(56px) saturate(160%);
+
+  --cursor-size: 8px;
+  --cursor-ring: 36px;
+}
+
+/* Force dark professional palette — light theme retained as fallback only */
+html.theme-light {
+  --bg: #E8E8ED;
+  --bg-mesh: radial-gradient(ellipse 80% 60% at 20% 10%, rgba(196,168,106,0.1), transparent 50%),
+             radial-gradient(ellipse 70% 50% at 80% 90%, rgba(140,150,170,0.08), transparent 45%);
+  --surface: rgba(255,255,255,0.55);
+  --surface-solid: rgba(255,255,255,0.86);
+  --surface-2: rgba(242,242,247,0.75);
+  --surface-3: rgba(229,229,234,0.9);
+  --glass: rgba(255,255,255,0.45);
+  --glass-border: rgba(0,0,0,0.06);
+  --glass-highlight: rgba(255,255,255,0.7);
+  --border: rgba(0,0,0,0.06);
+  --border-strong: rgba(0,0,0,0.12);
+  --text: #1C1C1E;
+  --text-muted: #6E6E73;
+  --text-faint: #AEAEB2;
+  --brand: #9A7B3C;
+  --brand-hover: #B8944A;
+  --brand-tint: rgba(154,123,60,0.12);
+  --shadow-glass: 0 8px 32px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  background-image: var(--bg-mesh);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  font-size: 14.5px;
+  line-height: 1.45;
+  transition: background 0.6s var(--ease-smooth), color 0.5s;
+  cursor: none;
+}
+svg { display: block; }
+
+/* ========== CUSTOM CURSOR ========== */
+.cursor-dot,
+.cursor-ring {
+  position: fixed;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 99999;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  will-change: transform, width, height, opacity, background;
+  transition: opacity 0.25s var(--ease-out);
+}
+.cursor-dot {
+  width: var(--cursor-size);
+  height: var(--cursor-size);
+  background: var(--brand);
+  box-shadow: 0 0 12px var(--brand-glow);
+  mix-blend-mode: difference;
+}
+.cursor-ring {
+  width: var(--cursor-ring);
+  height: var(--cursor-ring);
+  border: 1px solid rgba(196, 168, 106, 0.45);
+  background: transparent;
+  transition:
+    width 0.35s var(--ease-heavy),
+    height 0.35s var(--ease-heavy),
+    border-color 0.3s,
+    background 0.3s,
+    opacity 0.3s;
+}
+body.is-hover-interactive .cursor-ring {
+  width: 52px;
+  height: 52px;
+  border-color: rgba(196, 168, 106, 0.7);
+  background: rgba(196, 168, 106, 0.06);
+}
+body.is-hover-text .cursor-ring {
+  width: 64px;
+  height: 64px;
+  border-color: rgba(242, 240, 235, 0.25);
+  background: rgba(242, 240, 235, 0.03);
+}
+body.is-dragging .cursor-dot,
+body.is-dragging .cursor-ring { opacity: 0.35; }
+@media (pointer: coarse) {
+  .cursor-dot, .cursor-ring { display: none !important; }
+  body { cursor: auto; }
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 272px 1fr 360px;
+  height: 100vh;
+  height: 100dvh;
+  opacity: 0;
+  transform: scale(0.98) translateY(10px);
+  filter: blur(8px);
+  transition: opacity 0.75s var(--ease-out), transform 0.8s var(--ease-out), filter 0.6s var(--ease-out);
+  pointer-events: none;
+}
+.app.is-ready {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  pointer-events: auto;
+}
+.app.is-ready .nav {
+  animation: introSlideLeft 0.8s var(--ease-out) both;
+}
+.app.is-ready .stage {
+  animation: introFadeUp 0.7s var(--ease-out) 0.1s both;
+}
+.app.is-ready .log-panel {
+  animation: introSlideRight 0.8s var(--ease-out) 0.14s both;
+}
+@keyframes introSlideLeft {
+  from { opacity: 0; transform: translateX(-28px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes introSlideRight {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes introFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes logPop {
+  0%   { opacity: 0; transform: translateY(12px) scale(0.96); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%     { opacity: 0.45; transform: scale(0.92); }
+}
+@keyframes softGlow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(196,168,106,0); }
+  50%     { box-shadow: 0 0 0 8px rgba(196,168,106,0.1); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes spin3d {
+  0%   { transform: rotateX(-22deg) rotateY(0deg) rotateZ(0deg); }
+  25%  { transform: rotateX(18deg) rotateY(90deg) rotateZ(4deg); }
+  50%  { transform: rotateX(-14deg) rotateY(180deg) rotateZ(0deg); }
+  75%  { transform: rotateX(22deg) rotateY(270deg) rotateZ(-4deg); }
+  100% { transform: rotateX(-22deg) rotateY(360deg) rotateZ(0deg); }
+}
+@keyframes orbit {
+  from { transform: rotateZ(0deg); }
+  to   { transform: rotateZ(360deg); }
+}
+@keyframes loaderIn {
+  from { opacity: 0; transform: scale(0.9); filter: blur(6px); }
+  to   { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+@keyframes loaderOut {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(1.04); filter: blur(5px); }
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(10px) scale(0.97); }
+}
+@keyframes widgetStagger {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes livePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(122,158,126,0); }
+  50% { box-shadow: 0 0 0 5px rgba(122,158,126,0.2); }
+}
+@keyframes revealLine {
+  from { clip-path: inset(0 100% 0 0); opacity: 0.4; }
+  to   { clip-path: inset(0 0 0 0); opacity: 1; }
+}
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-6px) rotate(0.5deg); }
+}
+
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+.widget-card.stagger-in {
+  animation: widgetStagger 0.55s var(--ease-out) both;
+}
+.stat-card.live-pulse .stat-dot {
+  animation: livePulse 1.8s ease-in-out infinite;
+}
+
+/* ========== GLASS ========== */
+.glass {
+  background: var(--glass);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+}
+.glass-heavy {
+  background: var(--surface);
+  backdrop-filter: var(--blur-heavy);
+  -webkit-backdrop-filter: var(--blur-heavy);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+}
+
+.apple-card {
+  background: var(--surface-solid);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  transition:
+    transform 0.5s var(--ease-heavy),
+    box-shadow 0.4s var(--ease-out),
+    border-color 0.3s;
+}
+.apple-card:hover:not(.dragging):not(.drag-over) {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(196, 168, 106, 0.15);
+}
+
+/* ========== SIDEBAR ========== */
+.nav {
+  display: flex;
+  flex-direction: column;
+  padding: 28px 16px 22px;
+  z-index: 30;
+  border-right: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 10px 36px;
+}
+.brand-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #C4A86A, #8A7340 70%, #5C4A28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0A0A0B;
+  box-shadow: 0 8px 24px rgba(196,168,106,0.25), inset 0 1px 0 rgba(255,255,255,0.25);
+  flex: none;
+  position: relative;
+  overflow: hidden;
+}
+.brand-mark::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.28) 0%, transparent 50%);
+  pointer-events: none;
+}
+.brand-mark svg { width: 20px; height: 20px; position: relative; z-index: 1; }
+.brand-name {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.brand-sub { font-size: 11.5px; color: var(--text-muted); font-weight: 500; margin-top: 2px; letter-spacing: 0.02em; }
+
+.nav-list { list-style: none; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.3s var(--ease-heavy);
+  user-select: none;
+  position: relative;
+}
+.nav-item .nav-icon { width: 20px; height: 20px; color: var(--text-faint); transition: color 0.25s; }
+.nav-item:hover { background: var(--surface-2); color: var(--text); }
+.nav-item:hover .nav-icon { color: var(--text); }
+.nav-item.active {
+  background: var(--brand-tint);
+  color: var(--brand);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(196,168,106,0.12);
+}
+.nav-item.active .nav-icon { color: var(--brand); }
+
+.nav-footer { padding-top: 20px; display: flex; flex-direction: column; gap: 14px; }
+.conn-status-line {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 12.5px; color: var(--text-muted); padding: 0 8px; font-weight: 500;
+}
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-faint); transition: all 0.35s;
+}
+.status-dot.on { background: var(--output-c); box-shadow: 0 0 0 3px rgba(122,158,126,0.2); }
+.status-dot.busy { background: var(--brand); animation: pulse 1.5s ease-in-out infinite; }
+
+.connect-btn {
+  display: flex; align-items: center; gap: 13px;
+  padding: 13px; border-radius: var(--radius);
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  cursor: pointer; text-align: left;
+  transition: all 0.35s var(--ease-heavy);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+.connect-btn:hover { transform: scale(1.02); box-shadow: var(--shadow-md); border-color: rgba(196,168,106,0.2); }
+.connect-btn:active { transform: scale(0.98); }
+
+.connect-badge {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--surface-2); color: var(--text-faint);
+  display: flex; align-items: center; justify-content: center;
+  flex: none; transition: all 0.3s;
+}
+.connect-badge svg { width: 17px; height: 17px; }
+.connect-badge.busy { background: var(--brand-tint); color: var(--brand); animation: softGlow 1.8s infinite; }
+.connect-badge.connected { background: rgba(122,158,126,0.18); color: var(--output-c); }
+.connect-text { display: flex; flex-direction: column; gap: 2px; }
+.connect-label { font-size: 13.5px; font-weight: 600; color: var(--text); }
+.connect-sub { font-size: 11.5px; color: var(--text-faint); }
+
+/* ========== STAGE ========== */
+.stage {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  z-index: 1;
+  position: relative;
+}
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 32px; position: sticky; top: 0; z-index: 100;
+}
+.topbar .eyebrow {
+  font-size: 12px; color: var(--text-muted); font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px;
+}
+.topbar h1 {
+  font-family: var(--font-serif);
+  font-size: 28px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.15;
+}
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.pill {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12.5px; font-weight: 550; color: var(--text-muted);
+  background: var(--surface-solid);
+  box-shadow: var(--shadow-sm);
+  padding: 8px 16px; border-radius: 99px;
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+}
+
+.icon-btn {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: var(--surface-solid);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  transition: all 0.35s var(--ease-heavy);
+  position: relative;
+  backdrop-filter: blur(16px);
+}
+.icon-btn svg { width: 18px; height: 18px; }
+.icon-btn:hover { transform: scale(1.08); border-color: rgba(196,168,106,0.25); }
+.icon-btn:active { transform: scale(0.94); }
+
+.badge-dot {
+  position: absolute; top: 8px; right: 8px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--danger); opacity: 0;
+  transition: opacity 0.3s;
+  box-shadow: 0 0 0 2px var(--surface-solid);
+}
+.badge-dot.show { opacity: 1; }
+
+.pages {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 32px 72px;
+  position: relative;
+  scroll-behavior: smooth;
+}
+
+/* ========== DASHBOARD ========== */
+.status-bar {
+  display: flex; align-items: center; gap: 22px;
+  padding: 28px 28px; margin-bottom: 32px;
+  position: relative; overflow: hidden;
+}
+.status-bar::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(196,168,106,0.06) 0%, transparent 55%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+/* Interactive geometric accent in status bar */
+.status-bar .hero-geo {
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 180px;
+  height: 180px;
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 0;
+}
+.status-bar .connect-badge { width: 52px; height: 52px; position: relative; z-index: 1; }
+.status-bar .connect-badge svg { width: 24px; height: 24px; }
+.status-bar-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
+.status-bar-info h2 {
+  margin: 0 0 6px;
+  font-family: var(--font-serif);
+  font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+}
+.status-bar-info p {
+  margin: 0; font-size: 14px; color: var(--text-muted); line-height: 1.5;
+  max-width: 420px;
+}
+
+.btn {
+  border: none; background: var(--surface-3); color: var(--text);
+  padding: 12px 20px; border-radius: 14px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.3s var(--ease-heavy); font-family: inherit;
+  position: relative; z-index: 1;
+  letter-spacing: 0.01em;
+}
+.btn:hover { transform: scale(1.03); }
+.btn:active { transform: scale(0.97); }
+.btn.primary {
+  background: linear-gradient(180deg, #D4BC82, var(--brand));
+  color: #0A0A0B;
+  box-shadow: 0 8px 24px rgba(196,168,106,0.28), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.btn.primary:hover {
+  background: linear-gradient(180deg, #E0C994, var(--brand-hover));
+  box-shadow: 0 10px 28px rgba(196,168,106,0.35);
+}
+
+/* Magnetic button layer */
+.btn.magnetic,
+.connect-btn.magnetic,
+.icon-btn.magnetic {
+  transition: transform 0.25s var(--ease-heavy);
+}
+
+.stats-row {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 14px; margin-bottom: 36px;
+}
+.stat-card {
+  padding: 20px 22px;
+  position: relative; overflow: hidden;
+}
+.stat-card::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-highlight), transparent);
+  opacity: 0.5;
+}
+.stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-bottom: 12px; letter-spacing: 0.03em; text-transform: uppercase; }
+.stat-value {
+  font-family: var(--font-serif);
+  font-size: 32px; font-weight: 600; letter-spacing: -0.03em;
+  margin-bottom: 6px; line-height: 1;
+}
+.stat-sub {
+  font-size: 12.5px; color: var(--text-faint);
+  display: flex; align-items: center; gap: 7px;
+}
+.stat-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+.section-heading {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin: 36px 0 16px;
+}
+.section-heading h3 {
+  font-family: var(--font-serif);
+  font-size: 20px; font-weight: 600; letter-spacing: -0.02em;
+}
+.section-heading span { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+.section-heading .hint {
+  font-size: 11.5px; color: var(--text-faint);
+  background: var(--surface-2); padding: 4px 10px; border-radius: 8px;
+}
+
+.grid-widgets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 14px;
+  min-height: 80px;
+  position: relative;
+}
+
+/* ========== WIDGET CARD ========== */
+.widget-card {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  position: relative;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  min-width: 0;
+  overflow: hidden;
+  will-change: transform, box-shadow;
+  transition:
+    transform 0.45s var(--ease-heavy),
+    box-shadow 0.4s var(--ease-out),
+    opacity 0.25s,
+    border-color 0.25s,
+    filter 0.25s;
+}
+.widget-card:active { cursor: grabbing; }
+.widget-card.dragging {
+  opacity: 1;
+  cursor: grabbing;
+  border-color: rgba(196,168,106,0.4);
+  box-shadow:
+    0 40px 80px rgba(0,0,0,0.5),
+    0 16px 40px rgba(196,168,106,0.1),
+    0 0 0 1px rgba(196,168,106,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  filter: brightness(1.04);
+  z-index: 9999;
+  transition: box-shadow 0.2s, border-color 0.2s, filter 0.2s;
+}
+.widget-card.drag-settling {
+  transition: transform 0.5s var(--ease-heavy), box-shadow 0.4s var(--ease-out), opacity 0.3s;
+}
+.widget-card.drag-over {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px var(--brand-tint), var(--shadow-md);
+  transform: scale(1.02);
+}
+.widget-card .drag-handle {
+  position: absolute; top: 12px; right: 12px;
+  width: 26px; height: 26px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-faint); opacity: 0;
+  transition: opacity 0.2s, background 0.2s;
+  pointer-events: none;
+}
+.widget-card:hover .drag-handle { opacity: 0.65; }
+.widget-card .drag-handle svg { width: 13px; height: 13px; }
+
+.drag-placeholder {
+  border-radius: var(--radius-lg);
+  border: 1.5px dashed rgba(196,168,106,0.4);
+  background: linear-gradient(135deg, rgba(196,168,106,0.06), rgba(140,150,170,0.04));
+  pointer-events: none;
+  position: relative;
+  overflow: hidden;
+  animation: placeholderIn 0.3s var(--ease-heavy);
+  transition: height 0.25s var(--ease-out), margin 0.25s;
+}
+.drag-placeholder::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgba(196,168,106,0.1) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+@keyframes placeholderIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.widget-head { display: flex; align-items: center; gap: 11px; padding-right: 26px; }
+.w-icon-box {
+  width: 34px; height: 34px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.widget-card.input .w-icon-box {
+  background: rgba(139,163,199,0.14); color: var(--input-c);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.widget-card.output .w-icon-box {
+  background: rgba(122,158,126,0.14); color: var(--output-c);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.w-icon-box svg { width: 17px; height: 17px; }
+.w-label {
+  font-size: 15px; font-weight: 600; flex: 1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.w-value-row { display: flex; align-items: baseline; gap: 8px; }
+.w-value {
+  font-family: var(--font-serif);
+  font-size: 38px; font-weight: 600; letter-spacing: -0.03em;
+  color: var(--text); line-height: 1;
+}
+
+/* Toggle */
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between; margin-top: 6px;
+}
+.toggle {
+  position: relative; width: 50px; height: 30px; cursor: pointer; flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle .track {
+  position: absolute; inset: 0;
+  background: var(--surface-3); border-radius: 30px;
+  transition: background 0.35s var(--ease-heavy);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.25);
+}
+.toggle .track::after {
+  content: ""; position: absolute;
+  width: 26px; height: 26px; left: 2px; top: 2px;
+  background: #F2F0EB; border-radius: 50%;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.15);
+  transition: transform 0.4s var(--ease-heavy);
+}
+.toggle input:checked + .track { background: var(--output-c); }
+.toggle input:checked + .track::after { transform: translateX(20px); }
+.toggle-state { font-size: 15px; color: var(--text); font-weight: 550; }
+
+/* Slider */
+.slider-row { margin-top: 8px; }
+.slider-row input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 5px; border-radius: 99px;
+  background: var(--surface-3); outline: none;
+}
+.slider-row input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #F2F0EB; border: 1px solid rgba(0,0,0,0.1);
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.15);
+  transition: transform 0.2s var(--ease-heavy);
+}
+.slider-row input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.slider-row input[type=range]::-webkit-slider-thumb:active { transform: scale(1.08); }
+.slider-readout {
+  display: flex; justify-content: space-between;
+  font-size: 12.5px; color: var(--text-muted); margin-top: 10px; font-weight: 500;
+}
+
+.rm-btn {
+  position: absolute; top: 12px; right: 12px;
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); cursor: pointer;
+  transition: all 0.2s; background: transparent; border: none; z-index: 5;
+}
+.rm-btn:hover { background: rgba(196,92,84,0.14); color: var(--danger); }
+.rm-btn svg { width: 14px; height: 14px; }
+
+/* ========== LOG PANEL ========== */
+.log-panel {
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow: hidden;
+  z-index: 50;
+}
+.log-head {
+  padding: 24px 22px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.log-head h3 {
+  margin: 0 0 16px; font-size: 16px; font-weight: 600;
+  display: flex; align-items: center; gap: 8px; letter-spacing: -0.015em;
+  font-family: var(--font-serif);
+}
+.log-head h3 svg { width: 16px; height: 16px; color: var(--brand); }
+
+.log-tabs {
+  display: flex; background: var(--surface-2); padding: 3px; border-radius: 10px;
+}
+.log-tab {
+  flex: 1; text-align: center; padding: 7px 0;
+  font-size: 12px; font-weight: 550; color: var(--text-muted);
+  border-radius: 8px; cursor: pointer; transition: all 0.25s; user-select: none;
+}
+.log-tab.active {
+  color: var(--text); background: var(--surface-solid);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25); font-weight: 650;
+}
+
+.log-feed {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px;
+  gap: 9px;
+  scroll-behavior: smooth;
+}
+.log-entry {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 12.5px; padding: 11px 14px; border-radius: 12px;
+  background: var(--surface-solid); border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  animation: logPop 0.4s var(--ease-heavy);
+  flex-shrink: 0;
+  max-width: 100%;
+}
+.log-entry.in { border-left: 3px solid var(--input-c); }
+.log-entry.out { border-left: 3px solid var(--output-c); }
+.log-entry.system {
+  background: transparent; border: none; box-shadow: none;
+  align-items: center; color: var(--text-muted); text-align: center;
+  font-style: italic; padding: 8px;
+}
+.log-entry .m {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.log-entry .t { font-size: 10.5px; color: var(--text-muted); }
+
+.log-empty {
+  color: var(--text-muted); font-size: 13.5px; text-align: center;
+  padding: 44px 22px; line-height: 1.5;
+  flex-shrink: 0;
+}
+.log-feed[data-view="in"] .log-entry.out,
+.log-feed[data-view="in"] .log-entry.system { display: none; }
+.log-feed[data-view="out"] .log-entry.in,
+.log-feed[data-view="out"] .log-entry.system { display: none; }
+
+.log-tester {
+  padding: 12px 16px 16px;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--surface);
+  min-width: 0;
+}
+.log-tester input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 0;
+  background: var(--surface-2);
+  border: none;
+  color: var(--text);
+  padding: 12px 15px;
+  border-radius: 99px;
+  font-size: 12.5px;
+  font-family: var(--font-mono);
+  overflow-x: auto;
+  text-overflow: ellipsis;
+}
+.log-tester input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-tint);
+  text-overflow: clip;
+}
+.log-tester button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex: 0 0 44px;
+  background: linear-gradient(180deg, #D4BC82, var(--brand));
+  border: none;
+  color: #0A0A0B;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s var(--ease-heavy);
+  box-shadow: 0 6px 18px rgba(196,168,106,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.log-tester button svg { width: 17px; height: 17px; transform: translateX(-1px); }
+.log-tester button:hover { transform: scale(1.08); }
+.log-tester button:active { transform: scale(0.94); }
+
+.sparkline-wrap {
+  width: 100%;
+  height: 60px;
+  min-height: 60px;
+  max-height: 60px;
+  margin-top: 4px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+.sparkline-wrap canvas.sparkline {
+  width: 100% !important;
+  height: 60px !important;
+  max-width: 100%;
+  display: block;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1); border-radius: 10px;
+  border: 2px solid transparent; background-clip: content-box;
+}
+html.theme-light ::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.12); background-clip: content-box;
+}
+
+/* Builder & Settings */
+.builder, .settings-card { padding: 24px; }
+.builder {
+  display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto;
+  gap: 14px; align-items: end; margin-bottom: 32px;
+}
+.field label {
+  display: block; font-size: 12px; color: var(--text-muted);
+  font-weight: 550; margin-bottom: 7px; letter-spacing: 0.02em;
+}
+.field input, .field select {
+  width: 100%; background: var(--surface-2); border: none; color: var(--text);
+  padding: 12px 14px; border-radius: 12px; font-size: 14px;
+  font-family: inherit; appearance: none;
+}
+.field input:focus, .field select:focus {
+  outline: none; box-shadow: 0 0 0 3px var(--brand-tint);
+}
+
+#customEmpty {
+  padding: 56px 28px; text-align: center; color: var(--text-faint);
+  border: 1.5px dashed var(--border-strong); border-radius: var(--radius-xl);
+  font-size: 14px;
+}
+
+/* ========== TUTORIAL ========== */
+.tut-hero {
+  padding: 26px 26px 22px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.tut-hero-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--brand);
+  background: var(--brand-tint);
+  padding: 4px 11px;
+  border-radius: 99px;
+  margin-bottom: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.tut-hero h2 {
+  font-family: var(--font-serif);
+}
+.tut-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 720px;
+}
+.tut-step {
+  display: flex;
+  gap: 16px;
+  padding: 20px 22px;
+  align-items: flex-start;
+  transition: transform 0.4s var(--ease-heavy), box-shadow 0.35s;
+}
+.tut-step:hover {
+  transform: translateX(4px);
+}
+.tut-num {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #D4BC82, var(--brand));
+  color: #0A0A0B;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 5px 14px rgba(196,168,106,0.25);
+}
+.tut-body { flex: 1; min-width: 0; }
+.tut-body h3 {
+  margin: 0 0 9px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  font-family: var(--font-serif);
+}
+.tut-body p {
+  margin: 0 0 7px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+.tut-body ul, .tut-body ol {
+  margin: 0 0 7px;
+  padding-left: 18px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+.tut-body li { margin-bottom: 3px; }
+.tut-body code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--surface-2);
+  padding: 2px 6px;
+  border-radius: 5px;
+  color: var(--text);
+}
+.tut-code {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 11px 14px;
+  border-radius: 10px;
+  color: var(--brand);
+  font-weight: 600;
+  margin-top: 7px;
+}
+.tut-tip {
+  margin-top: 10px !important;
+  padding: 9px 12px;
+  background: var(--brand-tint);
+  border-radius: 10px;
+  color: var(--text) !important;
+  font-size: 12.5px !important;
+  line-height: 1.5 !important;
+}
+
+body.is-dragging {
+  cursor: grabbing !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+body.is-dragging * { cursor: grabbing !important; }
+
+/* ========== 3D LOADER ========== */
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  background: rgba(5,5,6,0.72);
+  backdrop-filter: blur(32px) saturate(140%);
+  -webkit-backdrop-filter: blur(32px) saturate(140%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.4s var(--ease-out), visibility 0.4s;
+}
+.loader-overlay.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+.loader-overlay.hiding {
+  animation: loaderOut 0.4s var(--ease-out) forwards;
+}
+
+.loader-stage {
+  width: 280px;
+  height: 260px;
+  position: relative;
+  perspective: 480px;
+  perspective-origin: 50% 40%;
+}
+.loader-stage .orbit-ring {
+  position: absolute;
+  left: 50%; top: 50%;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  pointer-events: none;
+  z-index: 0;
+}
+.loader-stage .orbit-ring:not(.r2):not(.r3) {
+  width: 170px; height: 170px;
+  margin: -85px 0 0 -85px;
+  border-top-color: rgba(196,168,106,0.4);
+  border-right-color: rgba(196,168,106,0.12);
+  animation: orbit 2s linear infinite;
+}
+.loader-stage .orbit-ring.r2 {
+  width: 200px; height: 200px;
+  margin: -100px 0 0 -100px;
+  border-top-color: rgba(139,163,199,0.28);
+  animation: orbit 2.8s linear infinite reverse;
+}
+.loader-stage .orbit-ring.r3 {
+  width: 140px; height: 140px;
+  margin: -70px 0 0 -70px;
+  border-top-color: rgba(255,255,255,0.1);
+  animation: orbit 3.4s linear infinite;
+}
+
+.cube-scene {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  transform-style: preserve-3d;
+  z-index: 2;
+}
+
+.cube-3d {
+  width: 100px;
+  height: 100px;
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  transform-style: preserve-3d;
+  transform: rotateX(-32deg) rotateY(42deg);
+  will-change: transform, opacity;
+  transition: opacity 0.3s ease;
+}
+.cube-3d.auto-spin {
+  animation: spin3d 5s linear infinite;
+}
+.cube-3d.follow-mouse {
+  animation: none !important;
+  transition: transform 0.12s linear;
+}
+.cube-3d.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  animation: none !important;
+}
+
+.cube-3d .face {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  left: 0;
+  top: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.2);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: #8A7340;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.3),
+    inset 0 -18px 32px rgba(40,30,10,0.4),
+    0 0 0 1px rgba(0,0,0,0.2);
+}
+.cube-3d .face::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: linear-gradient(160deg, rgba(255,255,255,0.25) 0%, transparent 42%);
+  pointer-events: none;
+}
+
+.cube-3d .face.f {
+  transform: translateZ(50px);
+  background: linear-gradient(160deg, #D4BC82 0%, #C4A86A 55%, #8A7340 100%);
+}
+.cube-3d .face.b {
+  transform: rotateY(180deg) translateZ(50px);
+  background: linear-gradient(160deg, #7A9E7E 0%, #4A6B4E 60%, #2A3E2C 100%);
+}
+.cube-3d .face.r {
+  transform: rotateY(90deg) translateZ(50px);
+  background: linear-gradient(160deg, #B8944A 0%, #6B5630 55%, #3D3018 100%);
+}
+.cube-3d .face.l {
+  transform: rotateY(-90deg) translateZ(50px);
+  background: linear-gradient(160deg, #C4A86A 0%, #8A7340 55%, #5C4A28 100%);
+}
+.cube-3d .face.u {
+  transform: rotateX(90deg) translateZ(50px);
+  background: linear-gradient(160deg, #F2F0EB 0%, #D4BC82 45%, #C4A86A 100%);
+}
+.cube-3d .face.d {
+  transform: rotateX(-90deg) translateZ(50px);
+  background: linear-gradient(160deg, #3D3018 0%, #1A1408 100%);
+}
+
+.cube-shadow {
+  position: absolute;
+  left: 50%;
+  top: 72%;
+  width: 120px;
+  height: 34px;
+  margin-left: -60px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center,
+    rgba(0,0,0,0.6) 0%,
+    rgba(0,0,0,0.3) 45%,
+    transparent 70%);
+  filter: blur(8px);
+  z-index: 1;
+  pointer-events: none;
+  transition: width .2s ease, margin-left .2s ease, opacity .2s ease;
+}
+
+.particle-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform-style: preserve-3d;
+  z-index: 3;
+}
+.particle {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #F2F0EB, #C4A86A 45%, #8A7340 90%);
+  box-shadow: 0 0 10px rgba(196,168,106,0.7), 0 0 18px rgba(196,168,106,0.3);
+  opacity: 0;
+  transform: translate3d(0,0,0) scale(0.3);
+  will-change: transform, opacity;
+}
+.particle.alt {
+  background: radial-gradient(circle at 30% 30%, #F2F0EB, #8BA3C7 50%, #C4A86A 95%);
+  box-shadow: 0 0 10px rgba(139,163,199,0.55);
+}
+.particle.sm { width: 4px; height: 4px; margin: -2px 0 0 -2px; }
+.particle.lg { width: 10px; height: 10px; margin: -5px 0 0 -5px; }
+
+.loader-hint {
+  font-size: 11.5px;
+  color: rgba(242,240,235,0.45);
+  font-weight: 500;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.loader-text {
+  text-align: center;
+  color: #F2F0EB;
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.015em;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  animation: loaderIn 0.5s var(--ease-out);
+  font-family: var(--font-serif);
+}
+.loader-text small {
+  display: block;
+  margin-top: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  opacity: 0.6;
+  font-family: var(--font);
+}
+
+/* ========== PAGE TRANSITIONS ========== */
+.pages { position: relative; }
+.page {
+  display: none;
+  pointer-events: none;
+}
+.page.active {
+  display: block;
+  opacity: 1;
+  transform: none;
+  filter: none;
+  pointer-events: auto;
+  animation: pageIn 0.4s var(--ease-out);
+}
+.page.leaving {
+  display: none !important;
+}
+
+/* ========== BT CONTROLLER ========== */
+.bitpad-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 8px 0 40px;
+}
+.bitpad-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+}
+.bitpad-card {
+  width: min(400px, 100%);
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 24px 20px 18px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: var(--text);
+}
+.bitpad-brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+}
+.bitpad-logo {
+  width: 46px; height: 46px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #C4A86A, #8A7340);
+  color: #0A0A0B;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: -0.02em;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 20px rgba(196,168,106,0.3);
+}
+.bitpad-brand h2 {
+  font-family: var(--font-serif);
+  font-size: 18px; font-weight: 600; letter-spacing: -0.02em; margin: 0; color: var(--text);
+}
+.bitpad-brand p {
+  margin: 2px 0 0; font-size: 11.5px; color: var(--text-muted);
+}
+.bitpad-pad {
+  width: 270px;
+  height: 270px;
+  position: relative;
+  background: linear-gradient(160deg, #1A1814 0%, #0F0E0C 100%);
+  border-radius: 24px;
+  border: 1px solid rgba(196,168,106,0.15);
+  box-shadow: inset 0 2px 0 rgba(255,255,255,0.04), inset 0 -8px 20px rgba(0,0,0,0.3), 0 14px 36px rgba(0,0,0,0.35);
+}
+.bitpad-btn {
+  position: absolute;
+  border: none;
+  background: transparent;
+  color: rgba(242,240,235,0.75);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  transition: transform .14s var(--ease-heavy), background .15s, color .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.bitpad-btn:hover {
+  background: rgba(196,168,106,0.1);
+  color: var(--brand);
+}
+.bitpad-btn:active,
+.bitpad-btn.pressed {
+  transform: scale(0.9);
+  background: rgba(196,168,106,0.22);
+  color: var(--brand);
+  box-shadow: 0 0 18px rgba(196,168,106,0.2);
+}
+.bitpad-btn.up    { top: 16px; left: 50%; transform: translateX(-50%); width: 66px; height: 66px; }
+.bitpad-btn.down  { bottom: 16px; left: 50%; transform: translateX(-50%); width: 66px; height: 66px; }
+.bitpad-btn.left  { left: 16px; top: 50%; transform: translateY(-50%); width: 66px; height: 66px; }
+.bitpad-btn.right { right: 16px; top: 50%; transform: translateY(-50%); width: 66px; height: 66px; }
+.bitpad-btn.up:active, .bitpad-btn.up.pressed { transform: translateX(-50%) scale(0.9); }
+.bitpad-btn.down:active, .bitpad-btn.down.pressed { transform: translateX(-50%) scale(0.9); }
+.bitpad-btn.left:active, .bitpad-btn.left.pressed { transform: translateY(-50%) scale(0.9); }
+.bitpad-btn.right:active, .bitpad-btn.right.pressed { transform: translateY(-50%) scale(0.9); }
+
+.bitpad-btn.center {
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #C4A86A, #8A7340);
+  color: #0A0A0B;
+  border: none;
+  box-shadow: 0 6px 18px rgba(196,168,106,0.3), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.bitpad-btn.center:hover {
+  filter: brightness(1.06);
+}
+.bitpad-btn.center:active,
+.bitpad-btn.center.pressed {
+  transform: translate(-50%, -50%) scale(0.92);
+  box-shadow: 0 4px 12px rgba(196,168,106,0.35);
+}
+.bitpad-legend {
+  display: flex; flex-wrap: wrap; gap: 9px 12px; justify-content: center;
+  font-size: 11.5px; color: var(--text-faint);
+}
+.bitpad-legend kbd {
+  display: inline-block;
+  min-width: 16px; text-align: center;
+  padding: 2px 5px; border-radius: 5px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  font-size: 10.5px; font-weight: 600; color: var(--text);
+}
+.bitpad-note {
+  font-size: 11px; color: var(--text-faint); text-align: center; margin: 0;
+}
+.bitpad-note code {
+  font-family: var(--font-mono);
+  background: rgba(255,255,255,0.05); padding: 1px 5px; border-radius: 4px;
+  color: rgba(242,240,235,0.65);
+}
+
+.bitpad-extra {
+  width: min(400px, 100%);
+  display: flex; flex-wrap: wrap; gap: 11px; justify-content: center;
+}
+.bitpad-extra:empty { display: none; }
+.bitpad-extra-label {
+  width: 100%; text-align: center;
+  font-size: 10.5px; font-weight: 650; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+/* ========== TEACHABLE MACHINE ========== */
+.tm-wrap {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(280px, 1.1fr);
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .tm-wrap { grid-template-columns: 1fr; }
+}
+.tm-card {
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  box-shadow: var(--shadow-sm);
+}
+.tm-card h3 {
+  margin: 0 0 6px;
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 600;
+}
+.tm-card .tm-desc {
+  margin: 0 0 16px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.tm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.tm-field label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.tm-field input[type="url"],
+.tm-field input[type="text"] {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.tm-field input:focus {
+  border-color: rgba(196,168,106,0.45);
+  box-shadow: 0 0 0 3px rgba(196,168,106,0.12);
+}
+.tm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.tm-status {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  min-height: 40px;
+  line-height: 1.45;
+}
+.tm-status.is-live { color: var(--output-c); }
+.tm-status.is-err { color: var(--danger); }
+.tm-webcam-box {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 1;
+  margin: 0 auto 14px;
+  background: #0a0a0b;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tm-webcam-box canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  display: block;
+}
+.tm-webcam-placeholder {
+  font-size: 13px;
+  color: var(--text-faint);
+  text-align: center;
+  padding: 20px;
+}
+.tm-pred-main {
+  text-align: center;
+  padding: 14px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.tm-pred-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 6px;
+}
+.tm-pred-value {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--brand);
+  letter-spacing: -0.02em;
+  word-break: break-all;
+}
+.tm-pred-conf {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.tm-pred-conf.ok { color: var(--output-c); }
+.tm-pred-conf.low { color: var(--text-faint); }
+.tm-bars { display: flex; flex-direction: column; gap: 8px; }
+.tm-bar-row { display: flex; flex-direction: column; gap: 4px; }
+.tm-bar-meta {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+.tm-bar-track {
+  height: 6px;
+  background: var(--bg);
+  border-radius: 99px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.tm-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--brand), #d4bc82);
+  border-radius: 99px;
+  transition: width 0.12s ease-out;
+}
+.tm-bar-fill.pass { background: linear-gradient(90deg, var(--output-c), #9bc49f); }
+.tm-hint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.tm-hint code {
+  font-family: var(--font-mono);
+  background: var(--bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11.5px;
+}
+.tm-last-sent {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(122,158,126,0.1);
+  border: 1px solid rgba(122,158,126,0.2);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--output-c);
+}
+
+.w-btn-hit {
+  width: 68px; height: 68px;
+  border: none;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 11.5px; font-weight: 700;
+  background: linear-gradient(145deg, #C4A86A, #8A7340);
+  color: #0A0A0B;
+  cursor: pointer;
+  box-shadow: 0 7px 18px rgba(196,168,106,0.28);
+  transition: transform .14s var(--ease-heavy), filter .15s, box-shadow .15s;
+  display: inline-flex; align-items: center; justify-content: center;
+  text-align: center; line-height: 1.15;
+  margin: 0 auto;
+}
+.w-btn-hit:active { transform: scale(0.92); filter: brightness(0.95); }
+.widget-card.output .w-btn-hit { display: flex; }
+
+.w-dpad-mini {
+  display: grid;
+  grid-template-areas:
+    ". u ."
+    "l c r"
+    ". d .";
+  gap: 5px;
+  justify-content: center;
+  justify-items: center;
+}
+.w-dpad-mini button {
+  width: 38px; height: 38px;
+  border: none; border-radius: 10px;
+  background: rgba(18,18,22,0.95); color: var(--text);
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.w-dpad-mini button:active { transform: scale(0.92); background: var(--brand); color: #0A0A0B; }
+.w-dpad-mini .u { grid-area: u; }
+.w-dpad-mini .d { grid-area: d; }
+.w-dpad-mini .l { grid-area: l; }
+.w-dpad-mini .r { grid-area: r; }
+.w-dpad-mini .c {
+  grid-area: c; border-radius: 50%;
+  background: linear-gradient(145deg, #C4A86A, #8A7340);
+  border: none;
+  color: #0A0A0B;
+  box-shadow: 0 4px 12px rgba(196,168,106,0.28);
+}
+
+/* ========== PAD LIVE ACTIVITY ========== */
+.pad-live-card {
+  width: min(340px, 100%);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--text);
+}
+.pad-live-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.pad-live-head h3 {
+  margin: 0; font-size: 14px; font-weight: 600;
+  display: flex; align-items: center; gap: 7px; letter-spacing: -0.01em;
+  font-family: var(--font-serif);
+}
+.pad-live-head h3 svg { width: 15px; height: 15px; color: var(--brand); }
+.pad-live-current {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+  position: relative;
+}
+.pad-live-current-label {
+  font-size: 10.5px; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-faint); margin-bottom: 7px;
+}
+.pad-live-current-value {
+  font-size: 28px; font-weight: 700; letter-spacing: -0.02em;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  transition: color 0.25s;
+}
+.pad-live-current-value.is-moving { color: var(--brand); }
+.pad-live-current-value.is-stop { color: var(--text-faint); }
+.pad-live-current-dot {
+  position: absolute; top: 12px; right: 12px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-faint);
+}
+.pad-live-current-dot.is-moving {
+  background: var(--brand);
+  animation: livePulse 1.1s ease-in-out infinite;
+}
+.pad-live-current-sub {
+  font-size: 11.5px; color: var(--text-faint); margin-top: 7px;
+  font-variant-numeric: tabular-nums;
+}
+.pad-live-list {
+  display: flex; flex-direction: column; gap: 7px;
+  max-height: 250px; overflow-y: auto; overflow-x: hidden;
+  padding-right: 2px;
+}
+.pad-live-empty {
+  color: var(--text-faint); font-size: 12.5px; text-align: center; padding: 18px 8px;
+}
+.pad-live-entry {
+  display: flex; align-items: center; gap: 9px;
+  background: var(--surface-2);
+  border-left: 3px solid var(--brand);
+  border-radius: 10px;
+  padding: 8px 11px;
+  font-size: 11.5px;
+  animation: logPop 0.3s var(--ease-out);
+}
+.pad-live-entry.is-stop { border-left-color: var(--text-faint); }
+.pad-live-entry .pad-live-badge {
+  font-family: var(--font-mono); font-weight: 700; font-size: 11.5px;
+  color: var(--text); flex: 1;
+}
+.pad-live-entry .pad-live-time {
+  font-size: 10px; color: var(--text-faint); font-variant-numeric: tabular-nums; flex-shrink: 0;
+}
+
+/* Activity History */
+.log-head-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin-bottom: 7px;
+}
+.log-head-top h3 { margin: 0; display: flex; align-items: center; gap: 7px; font-size: 14px; }
+.log-head-actions { display: flex; align-items: center; gap: 5px; }
+.log-live-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em;
+  color: var(--output-c);
+  background: rgba(122,158,126,0.12);
+  padding: 3px 7px; border-radius: 99px;
+}
+.log-live-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--output-c);
+  animation: liveBlink 1.5s ease-in-out infinite;
+}
+@keyframes liveBlink {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(122,158,126,0.4); }
+  50% { opacity: 0.5; box-shadow: 0 0 0 4px rgba(122,158,126,0); }
+}
+.log-icon-btn {
+  width: 26px; height: 26px; border-radius: 7px;
+  border: 1px solid var(--border); background: var(--surface-2);
+  color: var(--text-muted); cursor: pointer; font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+}
+.log-icon-btn:hover { color: var(--text); background: var(--surface-3); }
+.log-meta-row {
+  display: flex; justify-content: space-between;
+  font-size: 10.5px; color: var(--text-faint); margin-bottom: 9px;
+  font-variant-numeric: tabular-nums;
+}
+.log-entry {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border-left: 3px solid transparent;
+  animation: logPop 0.25s var(--ease-out);
+}
+.log-entry .log-row-top {
+  display: flex; align-items: center; gap: 7px;
+}
+.log-badge {
+  font-size: 8.5px; font-weight: 800; letter-spacing: 0.06em;
+  padding: 2px 5px; border-radius: 4px; text-transform: uppercase;
+  flex-shrink: 0;
+}
+.log-badge.in { background: rgba(139,163,199,0.18); color: var(--input-c); }
+.log-badge.out { background: rgba(122,158,126,0.16); color: var(--output-c); }
+.log-badge.system { background: rgba(154,150,144,0.18); color: var(--text-muted); }
+.log-badge.error { background: rgba(196,92,84,0.16); color: var(--danger); }
+.log-badge.pad { background: rgba(196,168,106,0.16); color: var(--brand); }
+.log-entry .m {
+  font-family: var(--font-mono); font-size: 11.5px; font-weight: 500;
+  word-break: break-all; color: var(--text); flex: 1;
+}
+.log-entry .t {
+  font-size: 9.5px; color: var(--text-faint); font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.log-entry.in { border-left-color: var(--input-c); }
+.log-entry.out { border-left-color: var(--output-c); }
+.log-entry.system { border-left-color: var(--text-faint); }
+.log-entry.error { border-left-color: var(--danger); background: rgba(196,92,84,0.06); }
+.log-entry.pad { border-left-color: var(--brand); }
+.log-feed[data-view="in"] .log-entry:not(.in) { display: none; }
+.log-feed[data-view="out"] .log-entry:not(.out):not(.pad) { display: none; }
+.log-feed[data-view="system"] .log-entry:not(.system) { display: none; }
+.log-feed[data-view="error"] .log-entry:not(.error) { display: none; }
+
+/* ========== TOAST ========== */
+.toast-stack {
+  position: fixed;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9000;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  align-items: center;
+  pointer-events: none;
+  width: min(400px, calc(100vw - 28px));
+}
+.toast {
+  pointer-events: auto;
+  background: var(--surface-solid);
+  opacity: 1;
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 13px 16px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--text);
+  animation: toastIn 0.45s var(--ease-heavy);
+  max-width: 100%;
+}
+.toast.out { animation: toastOut 0.3s var(--ease-out) forwards; }
+.toast .toast-icon {
+  width: 26px; height: 26px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  background: var(--brand-tint); color: var(--brand);
+}
+.toast .toast-icon svg { width: 14px; height: 14px; }
+.toast .toast-body { flex: 1; min-width: 0; }
+.toast .toast-body strong { display: block; font-weight: 650; margin-bottom: 2px; font-size: 13.5px; }
+.toast .toast-body span { color: var(--text-muted); font-size: 12.5px; }
+.toast .toast-close {
+  background: none; border: none; color: var(--text-faint);
+  cursor: pointer; padding: 3px; border-radius: 5px;
+  line-height: 1; font-size: 15px;
+}
+.toast .toast-close:hover { color: var(--text); background: var(--surface-2); }
+
+.tip-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  padding: 4px 11px;
+  border-radius: 99px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+}
+.tip-chip kbd {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  background: var(--surface-solid);
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+/* Responsive */
+@media (max-width: 1280px) {
+  .app { grid-template-columns: 240px 1fr; }
+  .log-panel {
+    position: fixed;
+    right: 0; top: 0; bottom: 0;
+    width: min(360px, 100vw);
+    height: 100%;
+    max-height: 100dvh;
+    transform: translateX(110%);
+    transition: transform 0.45s var(--ease-out);
+    box-shadow: var(--shadow-float);
+  }
+  .log-panel.open { transform: translateX(0); }
+}
+@media (max-width: 900px) {
+  .app { grid-template-columns: 72px 1fr; }
+  .nav { padding: 22px 8px; align-items: center; }
+  .brand-name, .brand-sub, .nav-label, .conn-status-line span.txt, .connect-text { display: none; }
+  .nav-item { justify-content: center; padding: 12px; }
+  .connect-btn { justify-content: center; padding: 11px; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .builder { grid-template-columns: 1fr; }
+  .pages { padding: 12px 16px 60px; }
+  .topbar { padding: 14px 16px; }
+  .topbar h1 { font-size: 22px; }
+}
+@media (max-width: 560px) {
+  .stats-row { grid-template-columns: 1fr; }
+  .status-bar { flex-direction: column; text-align: center; gap: 14px; }
+}
+</style>
+</head>
+<body>
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="nav glass-heavy">
+    <div class="brand">
+      <div class="brand-mark"><span data-icon="bluetooth"></span></div>
+      <div>
+        <div class="brand-name">ACH Project</div>
+        <div class="brand-sub">kendali micro:bit</div>
+      </div>
+    </div>
+
+    <ul class="nav-list">
+      <li class="nav-item active" data-page="dashboard">
+        <span class="nav-icon" data-icon="grid"></span>
+        <span class="nav-label">Dashboard</span>
+      </li>
+      <li class="nav-item" data-page="widgets">
+        <span class="nav-icon" data-icon="plusSquare"></span>
+        <span class="nav-label">Widget Kustom</span>
+      </li>
+      <li class="nav-item" data-page="controller">
+        <span class="nav-icon" data-icon="zap"></span>
+        <span class="nav-label">BT Controller</span>
+      </li>
+      <li class="nav-item" data-page="teachable">
+        <span class="nav-icon" data-icon="camera"></span>
+        <span class="nav-label">Teachable AI</span>
+      </li>
+      <li class="nav-item" data-page="tutorial">
+        <span class="nav-icon" data-icon="book"></span>
+        <span class="nav-label">Tutorial</span>
+      </li>
+      <li class="nav-item" data-page="settings">
+        <span class="nav-icon" data-icon="settings"></span>
+        <span class="nav-label">Pengaturan</span>
+      </li>
+    </ul>
+
+    <div class="nav-footer">
+      <div class="conn-status-line">
+        <span class="status-dot" id="sideStatusDot"></span>
+        <span class="txt" id="sideStatusText">Terputus</span>
+      </div>
+      <button class="connect-btn magnetic" id="connectBtn">
+        <span class="connect-badge" id="connectBadge"><span data-icon="bluetooth"></span></span>
+        <span class="connect-text">
+          <span class="connect-label" id="connectBtnLabel">Sambungkan</span>
+          <span class="connect-sub" id="connectBtnSub">Via Bluetooth</span>
+        </span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="stage">
+    <header class="topbar glass">
+      <div>
+        <div class="eyebrow" id="pageEyebrow">Ringkasan</div>
+        <h1 id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <div class="pill">
+          <span class="status-dot" id="topStatusDot"></span>
+          <span id="topStatusText">Terputus</span>
+        </div>
+        <div class="icon-btn magnetic" id="logToggleBtn" title="Buka Log">
+          <span data-icon="activity"></span>
+          <span class="badge-dot" id="bellBadge"></span>
+        </div>
+      </div>
+    </header>
+
+    <div class="pages">
+
+      <!-- DASHBOARD -->
+      <section class="page active" id="page-dashboard">
+        <div class="status-bar apple-card">
+          <span class="connect-badge" id="heroBadge"><span data-icon="bluetooth"></span></span>
+          <div class="status-bar-info">
+            <h2 id="heroStatusText">Belum terhubung ke micro:bit</h2>
+            <p>Sambungkan untuk melihat data sensor langsung dan mengirim instruksi ke papan.</p>
+          </div>
+          <button class="btn primary magnetic" id="heroConnectBtn">Sambungkan Sekarang</button>
+          <svg class="hero-geo" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+            <circle cx="100" cy="100" r="70" stroke="rgba(196,168,106,0.25)" stroke-width="0.8"/>
+            <circle cx="100" cy="100" r="50" stroke="rgba(196,168,106,0.18)" stroke-width="0.6"/>
+            <circle cx="100" cy="100" r="30" stroke="rgba(196,168,106,0.12)" stroke-width="0.5"/>
+            <line x1="100" y1="20" x2="100" y2="180" stroke="rgba(196,168,106,0.1)" stroke-width="0.5"/>
+            <line x1="20" y1="100" x2="180" y2="100" stroke="rgba(196,168,106,0.1)" stroke-width="0.5"/>
+            <line x1="35" y1="35" x2="165" y2="165" stroke="rgba(196,168,106,0.08)" stroke-width="0.5"/>
+            <line x1="165" y1="35" x2="35" y2="165" stroke="rgba(196,168,106,0.08)" stroke-width="0.5"/>
+          </svg>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card apple-card">
+            <div class="stat-label">Widget Sensor</div>
+            <div class="stat-value" id="statInputCount">0</div>
+            <div class="stat-sub"><span class="stat-dot" style="background:var(--input-c)"></span>Menerima data</div>
+          </div>
+          <div class="stat-card apple-card">
+            <div class="stat-label">Widget Aktuator</div>
+            <div class="stat-value" id="statOutputCount">0</div>
+            <div class="stat-sub"><span class="stat-dot" style="background:var(--output-c)"></span>Mengirim data</div>
+          </div>
+          <div class="stat-card apple-card">
+            <div class="stat-label">Total Sinyal</div>
+            <div class="stat-value" id="statMsgCount">0</div>
+            <div class="stat-sub">Paket diproses</div>
+          </div>
+          <div class="stat-card apple-card">
+            <div class="stat-label">Status Jaringan</div>
+            <div class="stat-value" style="font-size:20px;margin-top:8px;" id="statConnLabel">Offline</div>
+            <div class="stat-sub" id="statConnSub">Siap dihubungkan</div>
+          </div>
+        </div>
+
+        <div class="section-heading">
+          <h3>Sensor Input</h3>
+          <span class="tip-chip">Tarik untuk atur ulang · data live dari micro:bit</span>
+        </div>
+        <div class="grid-widgets" id="dashInputGrid" data-zone="input"></div>
+
+        <div class="section-heading">
+          <h3>Kendali Aktuator</h3>
+          <span class="tip-chip">Toggle / slider kirim perintah · format <kbd>key,value</kbd></span>
+        </div>
+        <div class="grid-widgets" id="dashOutputGrid" data-zone="output"></div>
+      </section>
+
+      <!-- WIDGET CUSTOM -->
+      <section class="page" id="page-widgets">
+        <div class="builder apple-card">
+          <div class="field">
+            <label>Nama Tampilan</label>
+            <input type="text" id="wName" placeholder="Contoh: Relay Pompa">
+          </div>
+          <div class="field">
+            <label>Kunci Data (Key)</label>
+            <input type="text" id="wKey" placeholder="Contoh: pompa">
+          </div>
+          <div class="field">
+            <label>Tipe Widget</label>
+            <select id="wCategory">
+              <option value="input">Sensor Input</option>
+              <option value="digital_out">Digital Output (On/Off)</option>
+              <option value="analog_out">Analog Output (0–1023)</option>
+              <option value="button">Tombol (Button)</option>
+              <option value="dpad">Arah (D-Pad mini)</option>
+            </select>
+          </div>
+          <div class="field" id="wAnalogRangeField" style="display:none;">
+            <label>Range Analog</label>
+            <select id="wAnalogRange">
+              <option value="0-1023">0 – 1023 (micro:bit)</option>
+              <option value="0-255">0 – 255</option>
+              <option value="0-100">0 – 100 (%)</option>
+            </select>
+          </div>
+          <button class="btn primary magnetic" id="addWidgetBtn">Tambah</button>
+        </div>
+        <div class="section-heading"><h3>Widget Buatan Sendiri</h3></div>
+        <div class="grid-widgets" id="customGrid"></div>
+        <div id="customEmpty">Belum ada widget tambahan.</div>
+      </section>
+
+
+      <!-- BT CONTROLLER -->
+      <section class="page" id="page-controller">
+        <div class="bitpad-wrap">
+          <div class="bitpad-row">
+            <div class="bitpad-card">
+              <div class="bitpad-brand">
+                <div class="bitpad-logo">BT</div>
+                <div>
+                  <h2>BT Controller</h2>
+                  <p>Lofi Robot protocol · press / release</p>
+                </div>
+              </div>
+              <div class="bitpad-pad" id="bitPad">
+                <button class="bitpad-btn up" data-cmd="up" title="up" aria-label="up">
+                  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+                </button>
+                <button class="bitpad-btn left" data-cmd="left" title="left" aria-label="left">
+                  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 5l-7 7 7 7"/></svg>
+                </button>
+                <button class="bitpad-btn center" data-cmd="STOP" title="OK" aria-label="OK"></button>
+                <button class="bitpad-btn right" data-cmd="right" title="right" aria-label="right">
+                  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                </button>
+                <button class="bitpad-btn down" data-cmd="down" title="down" aria-label="down">
+                  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12l7 7 7-7"/></svg>
+                </button>
+              </div>
+              <div class="bitpad-legend">
+                <div><kbd>↑</kbd> up</div>
+                <div><kbd>↓</kbd> down</div>
+                <div><kbd>←</kbd> left</div>
+                <div><kbd>→</kbd> right</div>
+                <div><kbd>●</kbd> stop (paksa)</div>
+              </div>
+              <p class="bitpad-note">Tahan arah → <code>up/down/left/right</code> terus · lepas → <code>stop</code> terus</p>
+            </div>
+
+            <div class="pad-live-card apple-card" id="padLiveCard">
+              <div class="pad-live-head">
+                <h3><span data-icon="activity"></span>Aktivitas Pad</h3>
+                <span class="log-live-pill"><span class="log-live-dot"></span> LIVE</span>
+              </div>
+              <div class="pad-live-current">
+                <span class="pad-live-current-dot" id="padLiveDot"></span>
+                <div class="pad-live-current-label">Sedang dikirim</div>
+                <div class="pad-live-current-value is-stop" id="padLiveCurrent">STOP</div>
+                <div class="pad-live-current-sub" id="padLiveCurrentSub">Menunggu input…</div>
+              </div>
+              <div class="pad-live-list" id="padLiveList">
+                <div class="pad-live-empty" id="padLiveEmpty">Belum ada aktivitas pad.</div>
+              </div>
+            </div>
+          </div>
+          <div class="bitpad-extra" id="bitpadExtra"></div>
+        </div>
+      </section>
+
+      <!-- TEACHABLE MACHINE -->
+      <section class="page" id="page-teachable">
+        <div class="tm-wrap">
+          <div class="tm-card">
+            <h3>Model Teachable Machine</h3>
+            <p class="tm-desc">Tempel link model dari Teachable Machine (Export → Tensorflow.js). Kamera akan menyala dan prediksi dikirim ke micro:bit lewat Bluetooth UART.</p>
+            <div class="tm-field">
+              <label>URL Model</label>
+              <input type="url" id="tmModelUrl" placeholder="https://teachablemachine.withgoogle.com/models/xxxx/" spellcheck="false" autocomplete="off">
+            </div>
+            <div class="tm-actions">
+              <button type="button" class="btn primary magnetic" id="tmStartBtn">Mulai Kamera &amp; Model</button>
+              <button type="button" class="btn magnetic" id="tmStopBtn" disabled>Stop</button>
+            </div>
+            <div class="tm-status" id="tmStatus">Siap. Tempel URL model lalu tekan Mulai.</div>
+            <div class="tm-hint">
+              Ambang kepercayaan: <code>≥ 85%</code>. Di bawah itu data baru diabaikan; perintah terakhir yang lolos tetap dipakai.
+              Label kelas dikirim sebagai string UART (mis. <code>up</code>, <code>left</code>, nama kelasmu) + newline — sama seperti pad Lofi Robot.
+            </div>
+          </div>
+          <div class="tm-card">
+            <h3>Kamera &amp; Prediksi</h3>
+            <p class="tm-desc">Pratinjau webcam dan skor tiap kelas secara real-time.</p>
+            <div class="tm-webcam-box" id="tmWebcamBox">
+              <div class="tm-webcam-placeholder" id="tmWebcamPlaceholder">Kamera belum aktif</div>
+            </div>
+            <div class="tm-pred-main">
+              <div class="tm-pred-label">Prediksi aktif (≥85%)</div>
+              <div class="tm-pred-value" id="tmPredValue">—</div>
+              <div class="tm-pred-conf low" id="tmPredConf">0%</div>
+            </div>
+            <div class="tm-bars" id="tmBars"></div>
+            <div class="tm-last-sent" id="tmLastSent">Belum ada data terkirim ke micro:bit.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="page" id="page-settings">
+        <div class="grid-widgets" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));">
+          <div class="settings-card apple-card" style="display:flex;flex-direction:column;gap:20px;">
+            <h3 style="margin:0;font-size:17px;font-weight:600;font-family:var(--font-serif);">Tampilan Antarmuka</h3>
+            <div class="toggle-row" style="margin:0;">
+              <span style="font-weight:500;">Mode Gelap (Dark Mode)</span>
+              <label class="toggle">
+                <input type="checkbox" id="themeToggle" checked>
+                <span class="track"></span>
+              </label>
+            </div>
+            <div class="toggle-row" style="margin:0;">
+              <span style="font-weight:500;">Kurangi Animasi</span>
+              <label class="toggle">
+                <input type="checkbox" id="reduceMotionToggle">
+                <span class="track"></span>
+              </label>
+            </div>
+          </div>
+          <div class="settings-card apple-card" style="display:flex;flex-direction:column;gap:20px;">
+            <h3 style="margin:0;font-size:17px;font-weight:600;font-family:var(--font-serif);">Demo & Hardware</h3>
+            <div class="toggle-row" style="margin:0;">
+              <div>
+                <div style="font-weight:500;">Mode Demo (simulasi sensor)</div>
+                <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">Data palsu tanpa micro:bit</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="demoToggle">
+                <span class="track"></span>
+              </label>
+            </div>
+            <p style="margin:0;font-size:12.5px;color:var(--text-muted);line-height:1.45;">
+              Shortcut: <span class="tip-chip" style="margin:0 2px;"><kbd>L</kbd> log</span>
+              <span class="tip-chip" style="margin:0 2px;"><kbd>D</kbd> demo</span>
+              <span class="tip-chip" style="margin:0 2px;"><kbd>Esc</kbd> tutup</span>
+            </p>
+          </div>
+          <div class="settings-card apple-card" style="display:flex;flex-direction:column;gap:20px;">
+            <h3 style="margin:0;font-size:17px;font-weight:600;font-family:var(--font-serif);">Grafik & Penyimpanan</h3>
+            <div class="field">
+              <label>Batas Titik Grafik</label>
+              <select id="chartLimitSelect">
+                <option value="20">20 Data (Performa Optimal)</option>
+                <option value="50" selected>50 Data (Standar)</option>
+                <option value="100">100 Data (Padat)</option>
+              </select>
+            </div>
+            <button class="btn" id="clearDataBtn" style="color:var(--danger);background:rgba(196,92,84,0.12);">
+              Hapus Riwayat Log & Data
+            </button>
+            <button class="btn" id="resetWidgetsBtn" style="color:var(--text-muted);">
+              Reset Widget ke Default
+            </button>
+          </div>
+
+          <div class="settings-card apple-card" style="display:flex;flex-direction:column;gap:16px;grid-column:1/-1;">
+            <h3 style="margin:0;font-size:17px;font-weight:600;font-family:var(--font-serif);">MakeCode · Bluetooth UART</h3>
+            <p style="margin:0;font-size:12.5px;color:var(--text-muted);line-height:1.5;">
+              Protokol: <code style="font-family:var(--font-mono);background:var(--surface-2);padding:2px 6px;border-radius:5px;">key,value</code>
+              diakhiri newline. Cocok dengan extension <b>Bluetooth</b> di MakeCode.
+            </p>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+              <div class="field">
+                <label>Pemisah Key–Value</label>
+                <input type="text" id="cfgSeparator" value="," maxlength="3" placeholder=",">
+              </div>
+              <div class="field">
+                <label>Pemisah Baris (delimiter)</label>
+                <select id="cfgDelimiter">
+                  <option value="\n" selected>Newline (\n)</option>
+                  <option value="\r\n">CRLF (\r\n)</option>
+                  <option value=";">Titik koma (;)</option>
+                  <option value="|">Pipe (|)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Name Prefix perangkat</label>
+                <input type="text" id="cfgNamePrefix" value="BBC micro:bit" placeholder="BBC micro:bit">
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div class="field">
+                <label>UART Service UUID</label>
+                <input type="text" id="cfgUartSvc" value="6e400001-b5a3-f393-e0a9-e50e24dcca9e" style="font-family:var(--font-mono);font-size:11.5px;">
+              </div>
+              <div class="field">
+                <label>TX Char (micro:bit → app)</label>
+                <input type="text" id="cfgTxChr" value="6e400002-b5a3-f393-e0a9-e50e24dcca9e" style="font-family:var(--font-mono);font-size:11.5px;">
+              </div>
+              <div class="field">
+                <label>RX Char (app → micro:bit)</label>
+                <input type="text" id="cfgRxChr" value="6e400003-b5a3-f393-e0a9-e50e24dcca9e" style="font-family:var(--font-mono);font-size:11.5px;">
+              </div>
+              <div class="field">
+                <label>Suffix kirim (setelah value)</label>
+                <select id="cfgSendSuffix">
+                  <option value="\n" selected>Newline \n</option>
+                  <option value="\r\n">CRLF \r\n</option>
+                  <option value="">(tanpa suffix)</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn primary magnetic" id="saveBleCfgBtn" style="align-self:flex-start;">Simpan Konfigurasi BLE</button>
+
+            <div style="margin-top:6px;padding:14px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
+                <strong style="font-size:13.5px;">Contoh kode MakeCode (JavaScript)</strong>
+                <button class="btn" id="copyMakecodeBtn" style="padding:7px 12px;font-size:12.5px;">Salin</button>
+              </div>
+              <pre id="makecodeSample" style="margin:0;font-family:var(--font-mono);font-size:11.5px;line-height:1.55;white-space:pre-wrap;color:var(--text);overflow-x:auto;"></pre>
+            </div>
+
+            <div style="font-size:11.5px;color:var(--text-muted);line-height:1.55;">
+              <b>Cara pakai di MakeCode:</b><br>
+              1. Advanced → Extensions → cari <b>Bluetooth</b> → tambahkan<br>
+              2. Project Settings → No Pairing Required: Always<br>
+              3. Pakai block <code>bluetooth uart write string</code> / event <code>on uart data received</code><br>
+              4. Format kirim: <code>suhu,24.5</code> lalu newline · Format terima: <code>lampu,1</code>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TUTORIAL -->
+      <section class="page" id="page-tutorial">
+        <div class="tut-hero apple-card">
+          <div class="tut-hero-badge">Pemula</div>
+          <h2 style="margin:0 0 7px;font-size:22px;font-weight:600;letter-spacing:-0.02em;">Cara pakai ACH Project</h2>
+          <p style="margin:0;color:var(--text-muted);font-size:14px;line-height:1.5;">
+            Ikuti langkah-langkah di bawah dari nol. Nggak perlu jago coding — cukup ikutin aja.
+          </p>
+        </div>
+
+        <div class="tut-steps">
+
+          <div class="tut-step apple-card">
+            <div class="tut-num">1</div>
+            <div class="tut-body">
+              <h3>Siapkan micro:bit & browser</h3>
+              <ul>
+                <li>Pakai browser <b>Chrome</b> atau <b>Edge</b> (Bluetooth web cuma support di situ).</li>
+                <li>Pastikan laptop/HP punya Bluetooth dan sudah nyala.</li>
+                <li>micro:bit harus sudah di-program pakai MakeCode (lihat langkah 2).</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="tut-step apple-card">
+            <div class="tut-num">2</div>
+            <div class="tut-body">
+              <h3>Program micro:bit di MakeCode</h3>
+              <ol>
+                <li>Buka <b>makecode.microbit.org</b> → buat project baru.</li>
+                <li>Klik <b>Advanced → Extensions</b> → cari <b>Bluetooth</b> → tambahkan.</li>
+                <li>Klik gear ⚙️ di kanan atas → <b>Project Settings</b> → pilih <b>No Pairing Required: Always</b>.</li>
+                <li>Buka tab <b>JavaScript</b>, lalu di ACH Project buka <b>Pengaturan</b> → salin contoh kode → tempel di MakeCode.</li>
+                <li>Klik <b>Download</b> → copy file <code>.hex</code> ke micro:bit (seperti flash USB).</li>
+              </ol>
+              <p class="tut-tip">💡 Kalau belum punya kode, mode <b>Demo</b> di Pengaturan bisa dicoba dulu tanpa micro:bit.</p>
+            </div>
+          </div>
+
+          <div class="tut-step apple-card">
+            <div class="tut-num">3</div>
+            <div class="tut-body">
+              <h3>Sambungkan Bluetooth</h3>
+              <ol>
+                <li>Colok / nyalain micro:bit.</li>
+                <li>Di ACH Project, klik tombol <b>Sambungkan</b> (sidebar kiri atau di Dashboard).</li>
+                <li>Browser akan munculin daftar perangkat → pilih yang namanya dimulai <b>BBC micro:bit</b>.</li>
+                <li>Kalau berhasil, status jadi <b>Online / Terhubung</b> (titik hijau).</li>
+              </ol>
+              <p class="tut-tip">⚠️ Kalau gagal: pastikan Bluetooth laptop nyala, micro:bit masih nyala, dan coba refresh halaman.</p>
+            </div>
+          </div>
+
+          <div class="tut-step apple-card">
+            <div class="tut-num">4</div>
+            <div class="tut-body">
+              <h3>Pahami format data (penting!)</h3>
+              <p>Semua data dikirim dalam bentuk teks sederhana:</p>
+              <div class="tut-code">nama_key,nilai</div>
+              <p style="margin-top:11px;">Contoh:</p>
+              <ul>
+                <li><code>suhu,24.5</code> → sensor suhu kirim angka 24.5</li>
+                <li><code>lampu,1</code> → nyalakan lampu (digital on)</li>
+                <li><code>lampu,0</code> → matikan lampu</li>
+                <li><code>kipas,512</code> → set kecepatan kipas (analog)</li>
+              </ul>
+              <p class="tut-tip">🔑 <b>Key</b> harus sama persis antara MakeCode dan widget di sini (huruf kecil).</p>
+            </div>
+          </div>
+
+          <div class="tut-step apple-card">
+            <div class="tut-num">5</div>
+            <div class="tut-body">
+              <h3>Jenis widget</h3>
+              <ul>
+                <li><b>Sensor Input</b> — menampilkan data dari micro:bit (angka + grafik).</li>
+                <li><b>Digital Output</b> — saklar On/Off. Kirim <code>0</code> atau <code>1</code> (relay, LED, buzzer).</li>
+                <li><b>Analog Output</b> — slider 0–1023 (atau range lain). Cocok buat motor, servo, LED redup-terang.</li>
+              </ul>
+              <p>Widget bawaan: <b>Suhu</b> & <b>Kelembaban</b> (input), <b>Lampu</b> (digital), <b>Kipas</b> (analog).</p>
+            </div>
+          </div>
+
+          <div class="tut-step apple-card">
+            <div class="tut-num">6</div>
+            <div class="tut-body">
+              <h3>Buat widget sendiri</h3>
+              <ol>
+                <li>Buka menu <b>Widget Kustom</b>.</li>
+                <li>Isi <b>Nama</b> (bebas, contoh: “Relay Pompa”).</li>
+                <li>Isi <b>Key</b> (harus sama dengan kode MakeCode, contoh: <code>pompa</code>).</li>
+                <li>Pilih tipe: Sensor Input / Digital Output / Analog Output.</li>
+                <li>Klik <b>Tambah</b> — widget langsung muncul di Dashboard.</li>
+              </ol>
+              <p class="tut-tip">🗑️ Widget buatan sendiri bisa dihapus lewat ikon sampah di pojok kartu.</p>
+            </div>
+          </div>
+
+          <div class="tut-step apple-card">
+            <div class="tut-num">7</div>
+            <div class="tut-body">
+              <h3>Drag & tarik widget</h3>
+              <p>Di Dashboard, tahan lalu tarik kartu widget untuk mengatur urutan (Sensor Input dan Aktuator punya area masing-masing).</p>
+              <p class="tut-tip">✨ Urutan tersimpan otomatis di browser kamu.</p>
+            </div>
+          </div>
+
+          <div class="tut-step apple-card">
+            <div class="tut-num">8</div>
+            <div class="tut-body">
+              <h3>Lihat log sinyal</h3>
+              <p>Klik ikon gelombang di pojok kanan atas untuk buka panel <b>Aktivitas Sinyal</b>.</p>
+              <ul>
+                <li><b>Masuk</b> — data dari micro:bit</li>
+                <li><b>Keluar</b> — perintah yang kamu kirim</li>
+                <li>Bisa kirim manual di kotak bawah, contoh: <code>lampu,1</code></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="tut-step apple-card">
+            <div class="tut-num">9</div>
+            <div class="tut-body">
+              <h3>Tips kalau macet</h3>
+              <ul>
+                <li><b>Perangkat tidak muncul</b> → pastikan program MakeCode sudah ada Bluetooth + “No Pairing Required”.</li>
+                <li><b>Terhubung tapi data kosong</b> → cek Key sama, format <code>key,nilai</code>, dan ada newline di akhir.</li>
+                <li><b>Perintah tidak jalan</b> → di MakeCode harus ada <code>on uart data received</code> yang baca key tersebut.</li>
+                <li><b>Coba dulu tanpa hardware</b> → nyalakan <b>Mode Demo</b> di Pengaturan.</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- LOG -->
+  <aside class="log-panel glass-heavy" id="logPanel">
+    <div class="log-head">
+      <div class="log-head-top">
+        <h3><span data-icon="activity"></span>Activity History</h3>
+        <div class="log-head-actions">
+          <span class="log-live-pill" id="logLivePill" title="Realtime"><span class="log-live-dot"></span> LIVE</span>
+          <button type="button" class="log-icon-btn" id="logClearBtn" title="Bersihkan">✕</button>
+          <button type="button" class="log-icon-btn" id="logCopyBtn" title="Salin semua">⧉</button>
+        </div>
+      </div>
+      <div class="log-meta-row">
+        <span id="logCountLabel">0 event</span>
+        <span id="logLastLabel">—</span>
+      </div>
+      <div class="log-tabs">
+        <div class="log-tab active" data-filter="all">Semua</div>
+        <div class="log-tab" data-filter="in">Masuk</div>
+        <div class="log-tab" data-filter="out">Keluar</div>
+        <div class="log-tab" data-filter="system">Sistem</div>
+        <div class="log-tab" data-filter="error">Error</div>
+      </div>
+    </div>
+    <div class="log-feed" id="logFeed" data-view="all">
+      <div class="log-empty" id="logEmptyState">Belum ada aktivitas.<br>Semua aksi, BLE, pad & error muncul di sini secara realtime.</div>
+    </div>
+    <div class="log-tester">
+      <input type="text" id="logInput" placeholder="Kirim manual (contoh: lampu,1 atau UP)">
+      <button id="logSendBtn" title="Kirim"><span data-icon="send"></span></button>
+    </div>
+  </aside>
+</div>
+
+<!-- 3D CUBE ↔ PARTICLE LOADING -->
+<div class="loader-overlay" id="loaderOverlay" aria-hidden="true">
+  <div class="loader-stage" id="loaderStage">
+    <div class="orbit-ring"></div>
+    <div class="orbit-ring r2"></div>
+    <div class="orbit-ring r3"></div>
+    <div class="cube-scene">
+      <div class="cube-3d auto-spin" id="rubikCube">
+        <div class="face f"></div>
+        <div class="face b"></div>
+        <div class="face r"></div>
+        <div class="face l"></div>
+        <div class="face u"></div>
+        <div class="face d"></div>
+      </div>
+    </div>
+    <div class="cube-shadow" id="cubeShadow"></div>
+    <div class="particle-field" id="particleField"></div>
+  </div>
+  <div class="loader-hint">menyambungkan ke micro:bit…</div>
+  <div class="loader-text" id="loaderText">
+    Menyambungkan…
+    <small id="loaderSub">Menunggu izin Bluetooth</small>
+  </div>
+</div>
+
+<!-- TOAST TIPS -->
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+/* ===================== ICONS ===================== */
+const iconSet = {
+  grid: '<rect x="3" y="3" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><rect x="14" y="3" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><rect x="14" y="14" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/><rect x="3" y="14" width="7" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/>',
+  plusSquare: '<rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="12" y1="8" x2="12" y2="16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>',
+  settings: '<circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M12 2v3M12 19v3M22 12h-3M5 12H2M19.07 4.93l-2.12 2.12M7.05 16.95l-2.12 2.12M19.07 19.07l-2.12-2.12M7.05 7.05L4.93 4.93" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>',
+  bluetooth: '<path d="M6.5 6.5L17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>',
+  activity: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>',
+  send: '<path d="M22 2L15 22 11 13 2 9 22 2z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><line x1="22" y1="2" x2="11" y2="13" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>',
+  trash: '<path d="M4 6h16M9 6V4h6v2M6 6l1 14h10l1-14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>',
+  zap: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>',
+  sun: '<circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>',
+  grip: '<circle cx="9" cy="6" r="1.5" fill="currentColor"/><circle cx="15" cy="6" r="1.5" fill="currentColor"/><circle cx="9" cy="12" r="1.5" fill="currentColor"/><circle cx="15" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="18" r="1.5" fill="currentColor"/><circle cx="15" cy="18" r="1.5" fill="currentColor"/>',
+  book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>',
+  camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" fill="none" stroke="currentColor" stroke-width="2.5"/>'
+};
+
+function injectIcons(root = document) {
+  root.querySelectorAll('[data-icon]').forEach(el => {
+    const ico = el.getAttribute('data-icon');
+    if (iconSet[ico] && !el.querySelector('svg')) {
+      el.innerHTML = `<svg viewBox="0 0 24 24" width="100%" height="100%">${iconSet[ico]}</svg>`;
+    }
+  });
+}
+injectIcons();
+
+/* ===================== CUSTOM CURSOR ===================== */
+(function initCursor() {
+  const dot = document.getElementById('cursorDot');
+  const ring = document.getElementById('cursorRing');
+  if (!dot || !ring || window.matchMedia('(pointer: coarse)').matches) return;
+
+  let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+  let rx = mx, ry = my;
+  let raf = null;
+
+  const move = (e) => {
+    mx = e.clientX;
+    my = e.clientY;
+    if (!raf) raf = requestAnimationFrame(tick);
+  };
+
+  const tick = () => {
+    rx += (mx - rx) * 0.18;
+    ry += (my - ry) * 0.18;
+    dot.style.transform = `translate(${mx}px, ${my}px) translate(-50%,-50%)`;
+    ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%,-50%)`;
+    raf = null;
+    if (Math.abs(mx - rx) > 0.1 || Math.abs(my - ry) > 0.1) {
+      raf = requestAnimationFrame(tick);
+    }
+  };
+
+  window.addEventListener('mousemove', move, { passive: true });
+
+  const interactive = 'a, button, .btn, .nav-item, .icon-btn, .connect-btn, .toggle, .widget-card, .log-tab, .bitpad-btn, input, select, [data-icon], .rm-btn, .log-icon-btn, .w-btn-hit';
+  document.addEventListener('mouseover', (e) => {
+    if (e.target.closest(interactive)) {
+      document.body.classList.add('is-hover-interactive');
+    }
+    if (e.target.closest('h1, h2, h3, .brand-name, .w-value, .stat-value')) {
+      document.body.classList.add('is-hover-text');
+    }
+  });
+  document.addEventListener('mouseout', (e) => {
+    if (e.target.closest(interactive)) {
+      document.body.classList.remove('is-hover-interactive');
+    }
+    if (e.target.closest('h1, h2, h3, .brand-name, .w-value, .stat-value')) {
+      document.body.classList.remove('is-hover-text');
+    }
+  });
+})();
+
+/* ===================== MAGNETIC BUTTONS ===================== */
+(function initMagnetic() {
+  const strength = 0.28;
+  const maxDist = 80;
+
+  function bindMagnetic(el) {
+    if (el.dataset.magneticBound) return;
+    el.dataset.magneticBound = '1';
+    let rect = null;
+
+    el.addEventListener('pointerenter', () => { rect = el.getBoundingClientRect(); });
+    el.addEventListener('pointermove', (e) => {
+      if (!rect) rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = (e.clientX - cx) * strength;
+      const dy = (e.clientY - cy) * strength;
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+    });
+    el.addEventListener('pointerleave', () => {
+      el.style.transform = '';
+      rect = null;
+    });
+  }
+
+  function scan() {
+    document.querySelectorAll('.magnetic, .btn.primary, .connect-btn').forEach(bindMagnetic);
+  }
+  scan();
+  // re-scan after dynamic renders
+  const obs = new MutationObserver(() => scan());
+  obs.observe(document.body, { childList: true, subtree: true });
+})();
+
+/* ===================== HERO GEO INTERACTION ===================== */
+(function initHeroGeo() {
+  const geo = document.querySelector('.hero-geo');
+  if (!geo) return;
+  const statusBar = geo.closest('.status-bar');
+  if (!statusBar) return;
+
+  statusBar.addEventListener('pointermove', (e) => {
+    const r = statusBar.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    geo.style.transform = `translateY(-50%) rotateY(${px * 18}deg) rotateX(${-py * 12}deg)`;
+    geo.style.transition = 'transform 0.15s linear';
+  });
+  statusBar.addEventListener('pointerleave', () => {
+    geo.style.transform = 'translateY(-50%)';
+    geo.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)';
+  });
+})();
+
+/* ===================== TOAST TIPS ===================== */
+function showToast({ title, body, icon = 'zap', duration = 4500 } = {}) {
+  const stack = document.getElementById('toastStack');
+  if (!stack) { console.log('[toast]', title, body || ''); return null; }
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `
+    <div class="toast-icon" data-icon="${icon}"></div>
+    <div class="toast-body">
+      <strong>${title}</strong>
+      ${body ? `<span>${body}</span>` : ''}
+    </div>
+    <button class="toast-close" aria-label="Tutup">×</button>
+  `;
+  injectIcons(el);
+  const close = () => {
+    el.classList.add('out');
+    setTimeout(() => el.remove(), 300);
+  };
+  el.querySelector('.toast-close').addEventListener('click', close);
+  stack.appendChild(el);
+  if (duration > 0) setTimeout(close, duration);
+  return el;
+}
+
+/* ===================== 3D LOADER ===================== */
+const loaderOverlay = document.getElementById('loaderOverlay');
+const loaderText = document.getElementById('loaderText');
+const loaderSub = document.getElementById('loaderSub');
+const rubikCube = document.getElementById('rubikCube');
+const loaderStage = document.getElementById('loaderStage');
+const particleField = document.getElementById('particleField');
+
+const PARTICLE_COUNT = 42;
+let morphActive = false;
+let morphTimer = null;
+let particleNodes = [];
+
+function ensureParticles() {
+  if (!particleField || particleNodes.length) return;
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle' + (i % 3 === 0 ? ' alt' : '') + (i % 5 === 0 ? ' lg' : i % 4 === 0 ? ' sm' : '');
+    particleField.appendChild(p);
+    particleNodes.push(p);
+  }
+}
+
+function setParticles(state) {
+  ensureParticles();
+  particleNodes.forEach((p, i) => {
+    const angle = (i / PARTICLE_COUNT) * Math.PI * 2 + (i % 7) * 0.15;
+    const elev = ((i % 5) - 2) * 0.35;
+    if (state === 'hidden') {
+      p.style.transition = 'none';
+      p.style.opacity = '0';
+      p.style.transform = 'translate3d(0,0,0) scale(0.2)';
+    } else if (state === 'burst') {
+      const r = 55 + (i % 6) * 12 + Math.random() * 18;
+      const x = Math.cos(angle) * r * Math.cos(elev);
+      const y = Math.sin(elev) * r * 0.85;
+      const z = Math.sin(angle) * r * Math.cos(elev);
+      p.style.transition = `transform 0.55s cubic-bezier(0.2,0.8,0.2,1) ${i * 8}ms, opacity 0.35s ease ${i * 6}ms`;
+      p.style.opacity = '1';
+      p.style.transform = `translate3d(${x}px,${y}px,${z}px) scale(${0.85 + (i % 3) * 0.15})`;
+    } else if (state === 'orbit') {
+      const r = 48 + (i % 5) * 10;
+      const spin = angle + Math.PI * 0.7;
+      const x = Math.cos(spin) * r;
+      const y = Math.sin(spin * 0.6) * r * 0.4;
+      const z = Math.sin(spin) * r;
+      p.style.transition = `transform 0.9s linear, opacity 0.3s ease`;
+      p.style.opacity = '1';
+      p.style.transform = `translate3d(${x}px,${y}px,${z}px) scale(0.9)`;
+    } else if (state === 'gather') {
+      p.style.transition = `transform 0.5s cubic-bezier(0.4,0,0.2,1) ${i * 5}ms, opacity 0.4s ease ${i * 4}ms`;
+      p.style.opacity = '0';
+      p.style.transform = 'translate3d(0,0,0) scale(0.15)';
+    }
+  });
+}
+
+function runMorphCycle() {
+  if (!morphActive || !rubikCube) return;
+  rubikCube.classList.remove('is-hidden');
+  rubikCube.classList.add('auto-spin');
+  setParticles('hidden');
+
+  morphTimer = setTimeout(() => {
+    if (!morphActive) return;
+    rubikCube.classList.add('is-hidden');
+    rubikCube.classList.remove('auto-spin');
+    setParticles('burst');
+
+    morphTimer = setTimeout(() => {
+      if (!morphActive) return;
+      setParticles('orbit');
+
+      morphTimer = setTimeout(() => {
+        if (!morphActive) return;
+        setParticles('gather');
+
+        morphTimer = setTimeout(() => {
+          if (!morphActive) return;
+          rubikCube.classList.remove('is-hidden');
+          rubikCube.classList.add('auto-spin');
+          runMorphCycle();
+        }, 520);
+      }, 950);
+    }, 600);
+  }, 2200);
+}
+
+function startMorph() {
+  morphActive = true;
+  ensureParticles();
+  setParticles('hidden');
+  if (rubikCube) {
+    rubikCube.classList.remove('is-hidden', 'follow-mouse');
+    rubikCube.classList.add('auto-spin');
+    rubikCube.style.transform = '';
+  }
+  if (cubeShadow) cubeShadow.style.opacity = '0.75';
+  clearTimeout(morphTimer);
+  runMorphCycle();
+}
+
+function stopMorph() {
+  morphActive = false;
+  clearTimeout(morphTimer);
+  setParticles('hidden');
+  if (rubikCube) {
+    rubikCube.classList.remove('is-hidden', 'follow-mouse', 'auto-spin');
+  }
+}
+
+const cubeShadow = document.getElementById('cubeShadow');
+
+function showLoader(title = 'Menyambungkan…', sub = 'Menunggu izin Bluetooth') {
+  loaderText.childNodes[0].textContent = title;
+  loaderSub.textContent = sub;
+  loaderOverlay.classList.remove('hiding');
+  loaderOverlay.classList.add('show');
+  loaderOverlay.setAttribute('aria-hidden', 'false');
+  startMorph();
+}
+
+function hideLoader() {
+  stopMorph();
+  loaderOverlay.classList.add('hiding');
+  setTimeout(() => {
+    loaderOverlay.classList.remove('show', 'hiding');
+    loaderOverlay.setAttribute('aria-hidden', 'true');
+  }, 380);
+}
+
+function setLoaderText(title, sub) {
+  if (title) loaderText.childNodes[0].textContent = title;
+  if (sub) loaderSub.textContent = sub;
+}
+
+/* ===================== NAV ===================== */
+const navItems = document.querySelectorAll('.nav-item');
+const pages = document.querySelectorAll('.page');
+const pageMeta = {
+  dashboard:  { title: 'Dashboard', sub: 'Ringkasan' },
+  widgets:    { title: 'Widget Kustom', sub: 'Bikin kontrol sendiri' },
+  controller: { title: 'BT Controller', sub: 'Pad arah & tombol' },
+  teachable:  { title: 'Teachable AI', sub: 'Kamera · Teachable Machine' },
+  tutorial:   { title: 'Tutorial', sub: 'Panduan buat pemula' },
+  settings:   { title: 'Pengaturan', sub: 'Tampilan & Bluetooth' }
+};
+
+let currentPageId = 'dashboard';
+navItems.forEach(item => {
+  item.addEventListener('click', () => {
+    const target = item.getAttribute('data-page');
+    if (target === currentPageId) return;
+    navItems.forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    const next = document.getElementById(`page-${target}`);
+    const prev = document.getElementById(`page-${currentPageId}`);
+    if (prev) {
+      prev.classList.add('leaving');
+      prev.classList.remove('active');
+      setTimeout(() => prev.classList.remove('leaving'), 220);
+    }
+    if (next) {
+      next.classList.remove('leaving');
+      void next.offsetWidth;
+      next.classList.add('active');
+    }
+    currentPageId = target;
+    const meta = pageMeta[target] || { title: target, sub: '' };
+    document.getElementById('pageTitle').textContent = meta.title;
+    document.getElementById('pageEyebrow').textContent = meta.sub;
+    if (target === 'controller') renderBitpadExtra();
+  });
+});
+
+/* ===================== LOG ===================== */
+const logToggleBtn = document.getElementById('logToggleBtn');
+const logPanel = document.getElementById('logPanel');
+const bellBadge = document.getElementById('bellBadge');
+
+logToggleBtn.addEventListener('click', () => {
+  logPanel.classList.toggle('open');
+  bellBadge.classList.remove('show');
+});
+
+document.querySelectorAll('.log-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.log-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('logFeed').setAttribute('data-view', tab.getAttribute('data-filter'));
+  });
+});
+
+document.getElementById('logClearBtn')?.addEventListener('click', () => {
+  if (typeof clearActivityHistory === 'function') clearActivityHistory();
+});
+document.getElementById('logCopyBtn')?.addEventListener('click', () => {
+  if (typeof copyActivityHistory === 'function') copyActivityHistory();
+});
+
+let totalMessages = 0;
+
+const MAX_LOG_ENTRIES = 300;
+const activityHistory = [];
+
+let bleDev = null;
+let rxChr = null;
+let rxBuffer = '';
+
+function appendLog(message, type = 'system') {
+  totalMessages++;
+  const stat = document.getElementById('statMsgCount');
+  if (stat) stat.textContent = totalMessages;
+
+  const now = new Date();
+  const time = now.toLocaleTimeString('id-ID', {
+    hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+  }) + '.' + String(now.getMilliseconds()).padStart(3, '0');
+
+  let kind = type;
+  if (type === 'err') kind = 'error';
+  const badgeMap = {
+    in: 'IN', out: 'OUT', system: 'SYS', error: 'ERR', pad: 'PAD'
+  };
+  const badge = badgeMap[kind] || 'SYS';
+
+  activityHistory.push({ t: time, ts: now.getTime(), type: kind, message: String(message) });
+  if (activityHistory.length > MAX_LOG_ENTRIES) activityHistory.shift();
+
+  const feed = document.getElementById('logFeed');
+  if (!feed) { console.log('[log]', kind, message); return; }
+  const empty = document.getElementById('logEmptyState');
+  if (empty) empty.remove();
+
+  const nearBottom = feed.scrollHeight - feed.scrollTop - feed.clientHeight < 100;
+
+  const entry = document.createElement('div');
+  entry.className = `log-entry ${kind}`;
+  entry.dataset.type = kind;
+  entry.title = 'Klik untuk salin';
+  entry.innerHTML = `
+    <div class="log-row-top">
+      <span class="log-badge ${kind}">${badge}</span>
+      <div class="m"></div>
+      <span class="t">${time}</span>
+    </div>`;
+  entry.querySelector('.m').textContent = message;
+
+  entry.style.cursor = 'pointer';
+  entry.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(`[${time}] ${badge} ${message}`);
+      haptic(8);
+      showToast({ title: 'Disalin', body: message, icon: 'activity', duration: 1800 });
+    } catch {
+      showToast({ title: 'Gagal salin', body: 'Clipboard tidak tersedia.', icon: 'activity', duration: 2200 });
+    }
+  });
+
+  feed.appendChild(entry);
+
+  while (feed.querySelectorAll('.log-entry').length > MAX_LOG_ENTRIES) {
+    const first = feed.querySelector('.log-entry');
+    if (first) first.remove();
+    else break;
+  }
+
+  const countEl = document.getElementById('logCountLabel');
+  if (countEl) countEl.textContent = activityHistory.length + ' event';
+  const lastEl = document.getElementById('logLastLabel');
+  if (lastEl) lastEl.textContent = 'last ' + time;
+
+  if (nearBottom || kind === 'out' || kind === 'system' || kind === 'error' || kind === 'pad') {
+    requestAnimationFrame(() => { feed.scrollTop = feed.scrollHeight; });
+  }
+
+  if (logPanel && !logPanel.classList.contains('open')) {
+    if (kind === 'in' || kind === 'error' || kind === 'out') {
+      bellBadge.classList.add('show');
+    }
+  }
+
+  if (kind === 'error' && logPanel && !logPanel.classList.contains('open')) {
+    logPanel.classList.add('open');
+    bellBadge.classList.remove('show');
+  }
+}
+
+function clearActivityHistory() {
+  activityHistory.length = 0;
+  totalMessages = 0;
+  const stat = document.getElementById('statMsgCount');
+  if (stat) stat.textContent = '0';
+  const feed = document.getElementById('logFeed');
+  if (feed) {
+    feed.innerHTML = '<div class="log-empty" id="logEmptyState">Belum ada aktivitas.<br>Semua aksi, BLE, pad & error muncul di sini secara realtime.</div>';
+  }
+  const countEl = document.getElementById('logCountLabel');
+  if (countEl) countEl.textContent = '0 event';
+  const lastEl = document.getElementById('logLastLabel');
+  if (lastEl) lastEl.textContent = '—';
+  appendLog('Activity history dibersihkan.', 'system');
+}
+
+async function copyActivityHistory() {
+  const text = activityHistory.map(e => `[${e.t}] ${e.type.toUpperCase()} ${e.message}`).join('\\n');
+  if (!text) {
+    showToast({ title: 'Kosong', body: 'Belum ada event.', icon: 'activity', duration: 2000 });
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast({ title: 'History disalin', body: activityHistory.length + ' event', icon: 'activity', duration: 2500 });
+  } catch {
+    showToast({ title: 'Gagal salin', body: 'Clipboard diblokir browser.', icon: 'activity', duration: 2500 });
+  }
+}
+
+/* ===================== STORAGE ===================== */
+const STORAGE_KEY = 'ach_project_v1';
+const DEFAULT_WIDGETS = [
+  { id: 'suhu', name: 'Suhu Lingkungan (°C)', key: 'suhu', type: 'input', icon: 'sun', isDefault: true, order: 0 },
+  { id: 'kelembaban', name: 'Kelembaban Udara (%)', key: 'kelembaban', type: 'input', icon: 'activity', isDefault: true, order: 1 },
+  { id: 'lampu', name: 'Lampu Utama', key: 'lampu', type: 'output', control: 'switch', icon: 'zap', isDefault: true, order: 0 },
+  { id: 'kipas', name: 'Kecepatan Kipas', key: 'kipas', type: 'output', control: 'slider', icon: 'settings', isDefault: true, order: 1 }
+];
+
+function loadState() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  } catch { return {}; }
+}
+function saveState(patch) {
+  const cur = loadState();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...cur, ...patch }));
+}
+
+const saved = loadState();
+let widgets = Array.isArray(saved.widgets) && saved.widgets.length
+  ? saved.widgets
+  : JSON.parse(JSON.stringify(DEFAULT_WIDGETS));
+let chartInstances = {};
+let maxDataPoints = saved.maxDataPoints || 50;
+let demoMode = !!saved.demoMode;
+let demoTimer = null;
+let lastPacketAt = 0;
+
+const BLE_DEFAULTS = {
+  separator: ',',
+  delimiter: '\n',
+  namePrefix: 'BBC micro:bit',
+  uartSvc: '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
+  txChr:   '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
+  rxChr:   '6e400003-b5a3-f393-e0a9-e50e24dcca9e',
+  sendSuffix: '\n'
+};
+function loadBleCfg() {
+  const s = (loadState().bleCfg) || {};
+  const cfg = { ...BLE_DEFAULTS, ...s };
+  if (!cfg.separator) cfg.separator = ',';
+  if (cfg.sendSuffix === undefined || cfg.sendSuffix === null) cfg.sendSuffix = '\n';
+  if (!cfg.delimiter) cfg.delimiter = '\n';
+  return cfg;
+}
+function saveBleCfg(cfg) {
+  saveState({ bleCfg: cfg });
+}
+let bleCfg = loadBleCfg();
+if (!bleCfg.separator) bleCfg.separator = ',';
+if (bleCfg.sendSuffix !== '\n' && bleCfg.sendSuffix !== '') {
+  if (bleCfg.sendSuffix == null) bleCfg.sendSuffix = '\n';
+}
+
+if (saved.themeDark === false) {
+  document.documentElement.classList.add('theme-light');
+  document.getElementById('themeToggle').checked = false;
+} else {
+  document.getElementById('themeToggle').checked = true;
+}
+if (saved.reduceMotion) {
+  document.documentElement.classList.add('reduce-motion');
+  document.getElementById('reduceMotionToggle').checked = true;
+}
+document.getElementById('chartLimitSelect').value = String(maxDataPoints);
+document.getElementById('demoToggle').checked = demoMode;
+
+function persistWidgets() {
+  saveState({ widgets, maxDataPoints, demoMode });
+}
+
+document.getElementById('chartLimitSelect').addEventListener('change', e => {
+  maxDataPoints = parseInt(e.target.value, 10);
+  persistWidgets();
+  renderWidgets();
+});
+
+document.getElementById('themeToggle').addEventListener('change', e => {
+  document.documentElement.classList.toggle('theme-light', !e.target.checked);
+  saveState({ themeDark: e.target.checked });
+  Object.values(chartInstances).forEach(c => c && c.update());
+});
+
+document.getElementById('reduceMotionToggle').addEventListener('change', e => {
+  document.documentElement.classList.toggle('reduce-motion', e.target.checked);
+  saveState({ reduceMotion: e.target.checked });
+});
+
+/* ===================== DEMO MODE ===================== */
+function ingestPacket(line) {
+  appendLog(line, 'in');
+  lastPacketAt = Date.now();
+  const sep = bleCfg.separator || ',';
+  const parts = line.split(sep);
+  if (parts.length < 2) return;
+  const k = parts[0].trim().toLowerCase();
+  const v = parseFloat(parts.slice(1).join(sep));
+  if (isNaN(v)) return;
+  const w = widgets.find(x => x.key === k && x.type === 'input');
+  if (!w) return;
+  document.querySelectorAll(`#val-${w.id}`).forEach(el => {
+    el.textContent = Number.isInteger(v) ? v : v.toFixed(1);
+  });
+  const chart = chartInstances[w.id];
+  if (chart) {
+    const ds = chart.data.datasets[0].data;
+    const labels = chart.data.labels;
+    ds.push(v);
+    labels.push('');
+    while (ds.length > maxDataPoints) ds.shift();
+    while (labels.length > maxDataPoints) labels.shift();
+    chart.update('none');
+  }
+}
+
+function startDemo() {
+  if (demoTimer) return;
+  demoMode = true;
+  document.getElementById('demoToggle').checked = true;
+  persistWidgets();
+  if (!rxChr) {
+    document.getElementById('statConnLabel').textContent = 'Demo';
+    document.getElementById('statConnLabel').style.color = 'var(--brand)';
+    document.getElementById('topStatusText').textContent = 'Demo';
+    document.getElementById('sideStatusText').textContent = 'Demo';
+    document.getElementById('topStatusDot').className = 'status-dot on';
+    document.getElementById('sideStatusDot').className = 'status-dot on';
+  }
+  appendLog('Mode demo aktif — sensor disimulasikan.', 'system');
+  let t = 0;
+  demoTimer = setInterval(() => {
+    t += 0.15;
+    const suhu = +(22 + Math.sin(t) * 3 + Math.random() * 0.4).toFixed(1);
+    const hum = Math.round(55 + Math.cos(t * 0.7) * 12 + Math.random() * 2);
+    const sep = bleCfg.separator || ',';
+    ingestPacket(`suhu${sep}${suhu}`);
+    ingestPacket(`kelembaban${sep}${hum}`);
+    widgets.filter(w => w.type === 'input' && !['suhu','kelembaban'].includes(w.key)).forEach(w => {
+      const v = Math.round(400 + Math.sin(t + w.key.length) * 200 + Math.random() * 30);
+      ingestPacket(`${w.key}${bleCfg.separator || ','}${v}`);
+    });
+  }, 900);
+  showToast({ title: 'Mode Demo ON', body: 'Data sensor palsu mengalir. Matikan di Pengaturan.', icon: 'activity', duration: 3500 });
+}
+
+function stopDemo() {
+  if (demoTimer) { clearInterval(demoTimer); demoTimer = null; }
+  demoMode = false;
+  document.getElementById('demoToggle').checked = false;
+  persistWidgets();
+  if (!rxChr) {
+    setUIStatus('disconnected');
+  }
+  appendLog('Mode demo dimatikan.', 'system');
+  showToast({ title: 'Mode Demo OFF', body: 'Simulasi dihentikan.', icon: 'activity', duration: 2800 });
+}
+
+document.getElementById('demoToggle').addEventListener('change', e => {
+  if (e.target.checked) startDemo(); else stopDemo();
+});
+
+document.getElementById('resetWidgetsBtn').addEventListener('click', () => {
+  widgets = JSON.parse(JSON.stringify(DEFAULT_WIDGETS));
+  persistWidgets();
+  renderWidgets();
+  showToast({ title: 'Widget di-reset', body: 'Kembali ke 4 widget bawaan.', icon: 'settings', duration: 3000 });
+});
+
+/* ===================== KEYBOARD SHORTCUTS ===================== */
+document.addEventListener('keydown', e => {
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
+  if (e.key === 'l' || e.key === 'L') {
+    logPanel.classList.toggle('open');
+    bellBadge.classList.remove('show');
+  }
+  if (e.key === 'd' || e.key === 'D') {
+    if (demoMode) stopDemo(); else startDemo();
+  }
+  if (e.key === 'Escape') {
+    logPanel.classList.remove('open');
+    hideLoader();
+  }
+});
+
+function sortedWidgets(type) {
+  return widgets
+    .filter(w => w.type === type)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}
+
+function createWidgetCard(w, { draggable = false } = {}) {
+  const card = document.createElement('div');
+  card.className = `widget-card apple-card ${w.type}`;
+  card.dataset.id = w.id;
+  card.dataset.type = w.type;
+
+  let body = '';
+  if (w.type === 'input') {
+    body = `
+      <div class="w-value-row"><div class="w-value" id="val-${w.id}">--</div></div>
+      <div class="sparkline-wrap"><canvas class="sparkline" id="chart-${w.id}"></canvas></div>
+    `;
+  } else if (w.control === 'switch') {
+    body = `
+      <div style="font-size:11px;color:var(--text-faint);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;">Digital</div>
+      <div class="toggle-row">
+        <span class="toggle-state" id="lbl-${w.id}">Mati</span>
+        <label class="toggle">
+          <input type="checkbox" id="ctrl-${w.id}">
+          <span class="track"></span>
+        </label>
+      </div>
+    `;
+  } else if (w.control === 'button') {
+    body = `
+      <div style="font-size:11px;color:var(--text-faint);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;">Button</div>
+      <button class="w-btn-hit" id="ctrl-${w.id}" type="button">${w.name}</button>
+    `;
+  } else if (w.control === 'dpad') {
+    body = `
+      <div style="font-size:11px;color:var(--text-faint);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;">D-Pad</div>
+      <div class="w-dpad-mini" id="ctrl-${w.id}">
+        <button type="button" class="u" data-dir="up">↑</button>
+        <button type="button" class="l" data-dir="left">←</button>
+        <button type="button" class="c" data-dir="STOP">●</button>
+        <button type="button" class="r" data-dir="right">→</button>
+        <button type="button" class="d" data-dir="down">↓</button>
+      </div>
+    `;
+  } else {
+    const amin = w.min ?? 0;
+    const amax = w.max ?? 1023;
+    body = `
+      <div style="font-size:11px;color:var(--text-faint);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;">Analog · ${amin}–${amax}</div>
+      <div class="slider-row">
+        <input type="range" id="ctrl-${w.id}" min="${amin}" max="${amax}" value="${amin}">
+        <div class="slider-readout">
+          <span>${amin}</span>
+          <span id="readout-${w.id}">${amin}</span>
+          <span>${amax}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  card.innerHTML = `
+    <div class="widget-head">
+      <div class="w-icon-box" data-icon="${w.icon || 'activity'}"></div>
+      <div class="w-label">${w.name}</div>
+    </div>
+    ${body}
+    ${draggable ? '<div class="drag-handle" data-icon="grip"></div>' : ''}
+  `;
+
+  if (!w.isDefault) {
+    const rm = document.createElement('button');
+    rm.className = 'rm-btn';
+    rm.title = 'Hapus widget';
+    rm.innerHTML = `<span data-icon="trash"></span>`;
+    rm.addEventListener('click', (e) => {
+      e.stopPropagation();
+      widgets = widgets.filter(x => x.id !== w.id);
+      if (chartInstances[w.id]) {
+        chartInstances[w.id].destroy();
+        delete chartInstances[w.id];
+      }
+      persistWidgets();
+      renderWidgets();
+      showToast({ title: 'Widget dihapus', body: w.name, icon: 'trash', duration: 2500 });
+    });
+    card.appendChild(rm);
+  }
+
+  if (w.type === 'output') {
+    const ctrl = card.querySelector(`#ctrl-${w.id}`);
+    if (!ctrl) { /* no ctrl */ }
+    else if (w.control === 'switch') {
+      ctrl.addEventListener('change', () => handleControlChange(w.id, ctrl.checked ? 1 : 0));
+    } else if (w.control === 'button') {
+      ctrl.addEventListener('click', () => sendPadCmd(w.key || 'ok'));
+    } else if (w.control === 'dpad') {
+      ctrl.querySelectorAll('button').forEach(b => {
+        let held = false;
+        const code = b.dataset.dir;
+        b.addEventListener('pointerdown', e => {
+          e.preventDefault();
+          if (held) return;
+          held = true;
+          padPressDir(code);
+        });
+        const rel = () => {
+          if (!held) return;
+          held = false;
+          padReleaseDir(code);
+        };
+        b.addEventListener('pointerup', rel);
+        b.addEventListener('pointercancel', rel);
+      });
+    } else {
+      const readout = card.querySelector(`#readout-${w.id}`);
+      ctrl.addEventListener('input', () => { readout.textContent = ctrl.value; });
+      ctrl.addEventListener('change', () => handleControlChange(w.id, ctrl.value));
+    }
+  }
+
+  if (draggable) {
+    enableDrag(card);
+  }
+
+  return card;
+}
+
+/* ========== DRAG & DROP ========== */
+let dragState = null;
+let rafId = null;
+
+function haptic(pattern) {
+  try {
+    if (navigator.vibrate) navigator.vibrate(pattern);
+  } catch (_) {}
+}
+
+function enableDrag(card) {
+  card.addEventListener('pointerdown', onPointerDown, { passive: false });
+}
+
+function onPointerDown(e) {
+  if (e.target.closest('input, label, button, .rm-btn, .toggle, a, canvas')) return;
+  if (e.button !== 0 && e.pointerType === 'mouse') return;
+
+  const card = e.currentTarget;
+  const zone = card.closest('.grid-widgets');
+  if (!zone) return;
+
+  e.preventDefault();
+
+  const rect = card.getBoundingClientRect();
+  dragState = {
+    card,
+    zone,
+    pointerId: e.pointerId,
+    startX: e.clientX,
+    startY: e.clientY,
+    offsetX: e.clientX - rect.left,
+    offsetY: e.clientY - rect.top,
+    width: rect.width,
+    height: rect.height,
+    lastX: e.clientX,
+    lastY: e.clientY,
+    lastT: performance.now(),
+    vx: 0,
+    vy: 0,
+    moved: false,
+    placeholder: null,
+    lastTargetId: null,
+    pendingX: e.clientX,
+    pendingY: e.clientY
+  };
+
+  try { card.setPointerCapture(e.pointerId); } catch (_) {}
+  card.addEventListener('pointermove', onPointerMove, { passive: false });
+  card.addEventListener('pointerup', onPointerUp);
+  card.addEventListener('pointercancel', onPointerUp);
+}
+
+function startDragVisual(e) {
+  const s = dragState;
+  if (!s || s.moved) return;
+  s.moved = true;
+
+  const { card, zone, width, height } = s;
+
+  document.body.classList.add('is-dragging');
+  card.classList.add('dragging');
+  haptic(12);
+
+  const ph = document.createElement('div');
+  ph.className = 'drag-placeholder';
+  ph.style.height = height + 'px';
+  ph.style.minHeight = height + 'px';
+  s.placeholder = ph;
+  card.parentNode.insertBefore(ph, card);
+
+  card.style.position = 'fixed';
+  card.style.left = (e.clientX - s.offsetX) + 'px';
+  card.style.top = (e.clientY - s.offsetY) + 'px';
+  card.style.width = width + 'px';
+  card.style.height = height + 'px';
+  card.style.margin = '0';
+  card.style.pointerEvents = 'none';
+  card.style.zIndex = '9999';
+  card.style.transform = 'scale(1.05) rotate(0deg)';
+}
+
+function updateDragPosition() {
+  rafId = null;
+  if (!dragState || !dragState.moved) return;
+
+  const s = dragState;
+  const { card } = s;
+  const x = s.pendingX - s.offsetX;
+  const y = s.pendingY - s.offsetY;
+
+  const tilt = Math.max(-5, Math.min(5, s.vx * 0.07));
+  const scale = 1.05;
+
+  card.style.left = x + 'px';
+  card.style.top = y + 'px';
+  card.style.transform = `scale(${scale}) rotate(${tilt}deg)`;
+}
+
+function onPointerMove(e) {
+  if (!dragState) return;
+  e.preventDefault();
+
+  const s = dragState;
+  const now = performance.now();
+  const dt = Math.max(8, now - s.lastT);
+
+  const rawVx = (e.clientX - s.lastX) / dt * 16;
+  const rawVy = (e.clientY - s.lastY) / dt * 16;
+  s.vx = s.vx * 0.6 + rawVx * 0.4;
+  s.vy = s.vy * 0.6 + rawVy * 0.4;
+  s.lastX = e.clientX;
+  s.lastY = e.clientY;
+  s.lastT = now;
+  s.pendingX = e.clientX;
+  s.pendingY = e.clientY;
+
+  const dx = e.clientX - s.startX;
+  const dy = e.clientY - s.startY;
+
+  if (!s.moved && Math.hypot(dx, dy) < 6) return;
+
+  if (!s.moved) startDragVisual(e);
+
+  if (!rafId) rafId = requestAnimationFrame(updateDragPosition);
+
+  const zone = s.zone;
+  const others = [...zone.querySelectorAll('.widget-card:not(.dragging)')];
+  let closest = null;
+  let closestDist = Infinity;
+
+  others.forEach(c => {
+    const r = c.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+    if (dist < closestDist) {
+      closestDist = dist;
+      closest = c;
+    }
+  });
+
+  zone.querySelectorAll('.widget-card').forEach(c => c.classList.remove('drag-over'));
+
+  if (closest && closestDist < 200 && s.placeholder) {
+    closest.classList.add('drag-over');
+    const r = closest.getBoundingClientRect();
+    const before = e.clientY < r.top + r.height / 2;
+    const ref = before ? closest : closest.nextSibling;
+
+    if (s.placeholder.nextSibling !== ref && s.placeholder !== ref) {
+      zone.insertBefore(s.placeholder, ref);
+      if (s.lastTargetId !== closest.dataset.id) {
+        s.lastTargetId = closest.dataset.id;
+        haptic(6);
+      }
+    }
+  }
+}
+
+function onPointerUp(e) {
+  if (!dragState) return;
+
+  const s = dragState;
+  const { card, zone, moved, placeholder } = s;
+
+  try { card.releasePointerCapture(s.pointerId); } catch (_) {}
+  card.removeEventListener('pointermove', onPointerMove);
+  card.removeEventListener('pointerup', onPointerUp);
+  card.removeEventListener('pointercancel', onPointerUp);
+
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+
+  document.body.classList.remove('is-dragging');
+  zone.querySelectorAll('.widget-card').forEach(c => c.classList.remove('drag-over'));
+
+  if (moved && placeholder) {
+    placeholder.parentNode.insertBefore(card, placeholder);
+    placeholder.remove();
+
+    card.classList.add('drag-settling');
+    card.classList.remove('dragging');
+    card.style.position = '';
+    card.style.left = '';
+    card.style.top = '';
+    card.style.width = '';
+    card.style.height = '';
+    card.style.margin = '';
+    card.style.pointerEvents = '';
+    card.style.zIndex = '';
+    card.style.transform = '';
+
+    const orderedIds = [...zone.querySelectorAll('.widget-card')].map(c => c.dataset.id);
+    orderedIds.forEach((id, i) => {
+      const w = widgets.find(x => x.id === id);
+      if (w) w.order = i;
+    });
+    persistWidgets();
+
+    haptic([10, 40, 16]);
+
+    setTimeout(() => card.classList.remove('drag-settling'), 480);
+  } else {
+    card.classList.remove('dragging');
+  }
+
+  dragState = null;
+}
+
+/* ===================== RENDER ===================== */
+
+function renderBitpadExtra() {
+  const host = document.getElementById('bitpadExtra');
+  if (!host) return;
+  host.innerHTML = '';
+  const btns = widgets.filter(w => w.control === 'button');
+  if (!btns.length) return;
+  const lab = document.createElement('div');
+  lab.className = 'bitpad-extra-label';
+  lab.textContent = 'Custom Button';
+  host.appendChild(lab);
+  btns.forEach(w => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'w-btn-hit';
+    b.textContent = w.name;
+    b.title = 'key: ' + w.key;
+    b.addEventListener('click', () => sendPadCmd(w.key));
+    host.appendChild(b);
+  });
+}
+
+function renderWidgets() {
+  const dashIn = document.getElementById('dashInputGrid');
+  const dashOut = document.getElementById('dashOutputGrid');
+  const customG = document.getElementById('customGrid');
+
+  Object.values(chartInstances).forEach(c => c && c.destroy());
+  chartInstances = {};
+
+  dashIn.innerHTML = '';
+  dashOut.innerHTML = '';
+  customG.innerHTML = '';
+
+  let inC = 0, outC = 0, custC = 0;
+
+  sortedWidgets('input').forEach((w, i) => {
+    inC++;
+    const card = createWidgetCard(w, { draggable: true });
+    card.classList.add('stagger-in');
+    card.style.animationDelay = (i * 0.05) + 's';
+    dashIn.appendChild(card);
+  });
+  sortedWidgets('output').filter(w => w.control !== 'button').forEach((w, i) => {
+    outC++;
+    const card = createWidgetCard(w, { draggable: true });
+    card.classList.add('stagger-in');
+    card.style.animationDelay = (i * 0.05) + 's';
+    dashOut.appendChild(card);
+  });
+  outC += widgets.filter(w => w.type === 'output' && w.control === 'button').length;
+
+  widgets.filter(w => !w.isDefault && w.control !== 'button').forEach(w => {
+    customG.appendChild(createWidgetCard(w, { draggable: false }));
+    custC++;
+  });
+  renderBitpadExtra();
+
+  document.getElementById('statInputCount').textContent = inC;
+  document.getElementById('statOutputCount').textContent = outC;
+  document.getElementById('customEmpty').style.display = custC === 0 ? 'block' : 'none';
+
+  injectIcons(document);
+
+  widgets.filter(w => w.type === 'input').forEach(w => {
+    const canvas = document.getElementById(`chart-${w.id}`);
+    if (!canvas || typeof Chart === 'undefined') return;
+    try {
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 60);
+    gradient.addColorStop(0, 'rgba(139, 163, 199, 0.35)');
+    gradient.addColorStop(1, 'rgba(139, 163, 199, 0)');
+
+    chartInstances[w.id] = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: Array(maxDataPoints).fill(''),
+        datasets: [{
+          data: Array(maxDataPoints).fill(null),
+          borderColor: '#8BA3C7',
+          backgroundColor: gradient,
+          borderWidth: 2,
+          fill: true,
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          tension: 0.35,
+          spanGaps: true,
+          clip: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        resizeDelay: 50,
+        animation: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false },
+          filler: { propagate: false }
+        },
+        scales: {
+          x: { display: false, min: 0, max: maxDataPoints - 1 },
+          y: {
+            display: false,
+            beginAtZero: false,
+            grace: '8%'
+          }
+        },
+        layout: { padding: { top: 4, bottom: 2, left: 0, right: 0 } },
+        elements: { line: { borderJoinStyle: 'round' } }
+      }
+    });
+    } catch (err) { console.warn('chart', err); }
+  });
+}
+
+/* Add widget */
+document.getElementById('wCategory').addEventListener('change', e => {
+  const v = e.target.value;
+  const rangeField = document.getElementById('wAnalogRangeField');
+  if (rangeField) rangeField.style.display = v === 'analog_out' ? 'block' : 'none';
+});
+
+document.getElementById('addWidgetBtn').addEventListener('click', () => {
+  const name = document.getElementById('wName').value.trim();
+  const key = document.getElementById('wKey').value.trim().toLowerCase();
+  if (!name || !key) {
+    showToast({ title: 'Lengkapi form', body: 'Nama tampilan dan Key wajib diisi.', icon: 'activity', duration: 3000 });
+    return;
+  }
+  if (widgets.some(w => w.key === key)) {
+    showToast({ title: 'Key sudah dipakai', body: `Key "${key}" sudah ada. Pilih nama lain.`, icon: 'activity', duration: 3500 });
+    return;
+  }
+
+  const cat = document.getElementById('wCategory').value;
+  let type = 'input';
+  let control = null;
+  let icon = 'activity';
+  let min = 0, max = 1023;
+
+  if (cat === 'digital_out') {
+    type = 'output';
+    control = 'switch';
+    icon = 'zap';
+  } else if (cat === 'analog_out') {
+    type = 'output';
+    control = 'slider';
+    icon = 'settings';
+    const range = (document.getElementById('wAnalogRange')?.value || '0-1023').split('-');
+    min = parseInt(range[0], 10) || 0;
+    max = parseInt(range[1], 10) || 1023;
+  } else if (cat === 'button') {
+    type = 'output';
+    control = 'button';
+    icon = 'zap';
+  } else if (cat === 'dpad') {
+    type = 'output';
+    control = 'dpad';
+    icon = 'grid';
+  }
+
+  const sameType = widgets.filter(w => w.type === type);
+  const maxOrder = sameType.reduce((m, w) => Math.max(m, w.order ?? 0), -1);
+
+  const wObj = {
+    id: 'w_' + Date.now(),
+    name, key, type,
+    control,
+    icon,
+    isDefault: false,
+    order: maxOrder + 1
+  };
+  if (control === 'slider') {
+    wObj.min = min;
+    wObj.max = max;
+  }
+
+  widgets.push(wObj);
+  document.getElementById('wName').value = '';
+  document.getElementById('wKey').value = '';
+  persistWidgets();
+  renderWidgets();
+  haptic(10);
+
+  const tipeLabel = cat === 'input' ? 'Sensor Input'
+    : cat === 'digital_out' ? 'Digital Output'
+    : cat === 'analog_out' ? 'Analog Output'
+    : cat === 'button' ? 'Tombol Button'
+    : cat === 'dpad' ? 'D-Pad'
+    : 'Widget';
+  showToast({
+    title: 'Widget ditambahkan',
+    body: `"${name}" · ${tipeLabel} · key: ${key}`,
+    icon: type === 'input' ? 'activity' : 'zap',
+    duration: 3500
+  });
+});
+
+document.getElementById('clearDataBtn').addEventListener('click', () => {
+  totalMessages = 0;
+  document.getElementById('statMsgCount').textContent = '0';
+  document.getElementById('logFeed').innerHTML =
+    '<div class="log-empty" id="logEmptyState">Belum ada aktivitas.</div>';
+  renderWidgets();
+  appendLog('Riwayat grafik dan log dibersihkan.', 'system');
+  showToast({ title: 'Data dibersihkan', body: 'Log & grafik di-reset.', icon: 'trash', duration: 3000 });
+});
+
+renderWidgets();
+appendLog('Activity History realtime aktif. Semua event akan tercatat di sini.', 'system');
+if (demoMode) {
+  demoTimer = null;
+  demoMode = false;
+  startDemo();
+}
+
+/* ===================== BLE / MAKECODE UI ===================== */
+function applyBleCfgToForm() {
+  const sep = document.getElementById('cfgSeparator');
+  const del = document.getElementById('cfgDelimiter');
+  const pref = document.getElementById('cfgNamePrefix');
+  const svc = document.getElementById('cfgUartSvc');
+  const tx = document.getElementById('cfgTxChr');
+  const rx = document.getElementById('cfgRxChr');
+  const suf = document.getElementById('cfgSendSuffix');
+  if (!sep) return;
+  sep.value = bleCfg.separator;
+  const delMap = { '\n': '\\n', '\r\n': '\\r\\n', ';': ';', '|': '|' };
+  del.value = delMap[bleCfg.delimiter] || '\\n';
+  pref.value = bleCfg.namePrefix;
+  svc.value = bleCfg.uartSvc;
+  tx.value = bleCfg.txChr;
+  rx.value = bleCfg.rxChr;
+  const sufMap = { '\n': '\\n', '\r\n': '\\r\\n', '': '' };
+  suf.value = sufMap[bleCfg.sendSuffix] ?? '\\n';
+}
+
+function readBleCfgFromForm() {
+  const unescape = (v) => {
+    if (v === '\\n') return '\n';
+    if (v === '\\r\\n') return '\r\n';
+    return v;
+  };
+  return {
+    separator: document.getElementById('cfgSeparator').value || ',',
+    delimiter: unescape(document.getElementById('cfgDelimiter').value),
+    namePrefix: document.getElementById('cfgNamePrefix').value.trim() || 'BBC micro:bit',
+    uartSvc: document.getElementById('cfgUartSvc').value.trim() || BLE_DEFAULTS.uartSvc,
+    txChr: document.getElementById('cfgTxChr').value.trim() || BLE_DEFAULTS.txChr,
+    rxChr: document.getElementById('cfgRxChr').value.trim() || BLE_DEFAULTS.rxChr,
+    sendSuffix: unescape(document.getElementById('cfgSendSuffix').value)
+  };
+}
+
+function buildMakecodeSample() {
+  const sep = bleCfg.separator;
+  return `// === ACH Project + MakeCode Bluetooth UART ===
+// 1. Extensions → Bluetooth
+// 2. Project Settings → No Pairing Required: Always
+// 3. Download ke micro:bit, lalu sambungkan dari ACH Project
+
+bluetooth.startUartService()
+
+// --- KIRIM sensor ke app (setiap 1 detik) ---
+basic.forever(function () {
+    let suhu = input.temperature()
+    let lembab = 40 + Math.randomRange(0, 30)  // ganti sensor asli
+    bluetooth.uartWriteString("suhu" + "${sep}" + suhu + "\\n")
+    bluetooth.uartWriteString("kelembaban" + "${sep}" + lembab + "\\n")
+    basic.pause(1000)
+})
+
+// --- TERIMA perintah dari app ---
+bluetooth.onUartDataReceived(serial.delimiters(Delimiters.NewLine), function () {
+    let raw = bluetooth.uartReadUntil(serial.delimiters(Delimiters.NewLine))
+    let parts = raw.split("${sep}")
+    if (parts.length < 2) return
+    let key = parts[0]
+    let val = parseFloat(parts[1])
+
+    if (key == "lampu") {
+        if (val == 1) {
+            basic.showIcon(IconNames.Yes)
+            // pins.digitalWritePin(DigitalPin.P0, 1)
+        } else {
+            basic.clearScreen()
+            // pins.digitalWritePin(DigitalPin.P0, 0)
+        }
+    } else if (key == "kipas") {
+        // val 0..1023 → PWM
+        // pins.analogWritePin(AnalogPin.P1, val)
+        basic.showNumber(Math.idiv(val, 100))
+    }
+})`;
+}
+
+function refreshMakecodeSample() {
+  const el = document.getElementById('makecodeSample');
+  if (el) el.textContent = buildMakecodeSample();
+}
+
+document.getElementById('saveBleCfgBtn')?.addEventListener('click', () => {
+  bleCfg = readBleCfgFromForm();
+  saveBleCfg(bleCfg);
+  refreshMakecodeSample();
+  showToast({ title: 'Konfigurasi disimpan', body: 'Pemisah & UUID dipakai di koneksi berikutnya.', icon: 'settings', duration: 3500 });
+});
+
+document.getElementById('copyMakecodeBtn')?.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(buildMakecodeSample());
+    showToast({ title: 'Disalin', body: 'Tempel di MakeCode → JavaScript.', icon: 'activity', duration: 2500 });
+  } catch {
+    showToast({ title: 'Gagal salin', body: 'Clipboard tidak tersedia.', icon: 'activity', duration: 2500 });
+  }
+});
+
+applyBleCfgToForm();
+refreshMakecodeSample();
+
+function setUIStatus(s) {
+  const heroBtn   = document.getElementById('heroConnectBtn');
+  const heroText  = document.getElementById('heroStatusText');
+  const heroBadge = document.getElementById('heroBadge');
+  const sideBadge = document.getElementById('connectBadge');
+  const sideDot   = document.getElementById('sideStatusDot');
+  const topDot    = document.getElementById('topStatusDot');
+  const statLbl   = document.getElementById('statConnLabel');
+  const sideText  = document.getElementById('sideStatusText');
+
+  if (s === 'connecting') {
+    heroBtn.textContent = 'Mempersiapkan…';
+    heroText.textContent = 'Meminta izin browser…';
+    sideBadge.className = 'connect-badge busy';
+    heroBadge.className = 'connect-badge busy';
+    sideDot.className = 'status-dot busy';
+    topDot.className = 'status-dot busy';
+    statLbl.textContent = 'Menyambung';
+    statLbl.style.color = 'var(--text)';
+    sideText.textContent = 'Menyambung…';
+  } else if (s === 'connected') {
+    heroBtn.textContent = 'Putuskan Sambungan';
+    heroBtn.className = 'btn magnetic';
+    heroText.textContent = 'Terhubung ke ' + (bleDev?.name || 'micro:bit');
+    heroBadge.className = 'connect-badge connected';
+    sideBadge.className = 'connect-badge connected';
+    sideDot.className = 'status-dot on';
+    topDot.className = 'status-dot on';
+    document.getElementById('connectBtnLabel').textContent = 'Putuskan';
+    document.getElementById('connectBtnSub').textContent = bleDev?.name || 'micro:bit';
+    document.getElementById('topStatusText').textContent = 'Terhubung';
+    sideText.textContent = 'Terhubung';
+    statLbl.textContent = 'Online';
+    statLbl.style.color = 'var(--output-c)';
+  } else {
+    heroBtn.textContent = 'Sambungkan Sekarang';
+    heroBtn.className = 'btn primary magnetic';
+    heroText.textContent = 'Belum terhubung ke micro:bit';
+    heroBadge.className = 'connect-badge';
+    sideBadge.className = 'connect-badge';
+    sideDot.className = 'status-dot';
+    topDot.className = 'status-dot';
+    document.getElementById('connectBtnLabel').textContent = 'Sambungkan';
+    document.getElementById('connectBtnSub').textContent = 'Via Bluetooth';
+    document.getElementById('topStatusText').textContent = 'Terputus';
+    sideText.textContent = 'Terputus';
+    statLbl.textContent = 'Offline';
+    statLbl.style.color = 'var(--text)';
+  }
+}
+
+async function bleWrite(str) {
+  if (!rxChr) throw new Error('RX characteristic missing');
+  const bytes = new TextEncoder().encode(str);
+  const chunk = 20;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    const part = bytes.slice(i, i + chunk);
+    try {
+      if (typeof rxChr.writeValueWithoutResponse === 'function') {
+        await rxChr.writeValueWithoutResponse(part);
+      } else {
+        await rxChr.writeValue(part);
+      }
+    } catch (e1) {
+      try {
+        await rxChr.writeValue(part);
+      } catch (e2) {
+        throw e2;
+      }
+    }
+    if (bytes.length > chunk) await new Promise(r => setTimeout(r, 8));
+  }
+}
+
+async function toggleBT() {
+  if (bleDev && bleDev.gatt.connected) {
+    try { bleDev.gatt.disconnect(); } catch (_) {}
+    rxChr = null;
+    setUIStatus('disconnected');
+    showToast({ title: 'Terputus', body: 'Sambungan Bluetooth diakhiri.', icon: 'bluetooth', duration: 3000 });
+    return;
+  }
+  if (!navigator.bluetooth) {
+    showToast({
+      title: 'Bluetooth tidak tersedia',
+      body: 'Pakai Chrome/Edge di desktop, atau aktifkan flag Web Bluetooth.',
+      icon: 'bluetooth',
+      duration: 5000
+    });
+    return;
+  }
+  try {
+    setUIStatus('connecting');
+    showLoader('Mencari perangkat…', 'Pilih BBC micro:bit di dialog browser');
+    appendLog('Mencari perangkat Bluetooth…', 'system');
+
+    const svcUuid = bleCfg.uartSvc;
+    const txUuid  = bleCfg.txChr;
+    const rxUuid  = bleCfg.rxChr;
+    const namePf  = bleCfg.namePrefix || 'BBC micro:bit';
+
+    bleDev = await navigator.bluetooth.requestDevice({
+      filters: [
+        { namePrefix: namePf },
+        { namePrefix: 'micro:bit' },
+        { namePrefix: 'BBC' }
+      ],
+      optionalServices: [svcUuid, '6e400001-b5a3-f393-e0a9-e50e24dcca9e']
+    });
+
+    setLoaderText('Menghubungkan…', bleDev.name || 'micro:bit');
+    bleDev.addEventListener('gattserverdisconnected', () => {
+      rxChr = null;
+      setUIStatus('disconnected');
+      appendLog('Koneksi terputus.', 'system');
+      showToast({ title: 'Koneksi terputus', body: 'Micro:bit tidak lagi terhubung.', icon: 'bluetooth', duration: 3500 });
+    });
+
+    appendLog(`Menghubungkan ke ${bleDev.name}…`, 'system');
+    let server;
+    try {
+      server = await bleDev.gatt.connect();
+    } catch (ce) {
+      setLoaderText('Coba lagi…', 'Reconnect GATT');
+      await new Promise(r => setTimeout(r, 400));
+      server = await bleDev.gatt.connect();
+    }
+
+    setLoaderText('Menyiapkan UART…', 'Service & karakteristik MakeCode');
+    const service = await server.getPrimaryService(svcUuid);
+
+    const txChr = await service.getCharacteristic(txUuid);
+    await txChr.startNotifications();
+    txChr.addEventListener('characteristicvaluechanged', e => {
+      rxBuffer += new TextDecoder('utf-8').decode(e.target.value);
+      const delim = bleCfg.delimiter || '\n';
+      let buf = rxBuffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      const splitOn = delim === '\r\n' ? '\n' : delim;
+      const lines = buf.split(splitOn);
+      rxBuffer = lines.pop();
+      lines.forEach(l => {
+        l = l.trim();
+        if (l) ingestPacket(l);
+      });
+    });
+
+    rxChr = await service.getCharacteristic(rxUuid);
+    setUIStatus('connected');
+    appendLog('Sistem siap bertukar data. Format: key,value\\n', 'system');
+    hideLoader();
+    haptic([12, 40, 18]);
+    showToast({
+      title: 'Terhubung ke ' + (bleDev.name || 'micro:bit'),
+      body: 'Sensor & aktuator siap. Format kirim: lampu,1\\n',
+      icon: 'zap',
+      duration: 4500
+    });
+  } catch (err) {
+    console.warn(err);
+    hideLoader();
+    setUIStatus('disconnected');
+    const msg = (err && err.message) ? String(err.message) : 'dibatalkan';
+    appendLog('Koneksi gagal: ' + msg, 'error');
+    showToast({
+      title: 'Koneksi gagal',
+      body: msg.includes('User cancelled') || msg.includes('canceled')
+        ? 'Dialog dibatalkan. Coba lagi.'
+        : 'Pastikan micro:bit nyala, Bluetooth on, program MakeCode sudah ada Bluetooth.',
+      icon: 'bluetooth',
+      duration: 5000
+    });
+  }
+}
+
+
+/* ===================== LIVE ACTIVITY PANEL ===================== */
+const padLiveCurrent = document.getElementById('padLiveCurrent');
+const padLiveCurrentSub = document.getElementById('padLiveCurrentSub');
+const padLiveDot = document.getElementById('padLiveDot');
+const padLiveList = document.getElementById('padLiveList');
+const MAX_PAD_LIVE_ENTRIES = 40;
+
+function padLiveTimestamp() {
+  const now = new Date();
+  return now.toLocaleTimeString('id-ID', {
+    hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'
+  }) + '.' + String(now.getMilliseconds()).padStart(3, '0');
+}
+
+function updatePadLiveCurrent(cmd, { viaDemo = false } = {}) {
+  if (!padLiveCurrent) return;
+  const isStop = String(cmd).toLowerCase() === 'stop';
+  padLiveCurrent.textContent = String(cmd).toUpperCase();
+  padLiveCurrent.classList.toggle('is-stop', isStop);
+  padLiveCurrent.classList.toggle('is-moving', !isStop);
+  if (padLiveDot) padLiveDot.classList.toggle('is-moving', !isStop);
+  if (padLiveCurrentSub) {
+    padLiveCurrentSub.textContent = (viaDemo ? '(demo) ' : '') + 'terakhir dikirim ' + padLiveTimestamp();
+  }
+}
+
+function pushPadLiveEntry(cmd, { viaDemo = false } = {}) {
+  if (!padLiveList) return;
+  const empty = document.getElementById('padLiveEmpty');
+  if (empty) empty.remove();
+
+  const isStop = String(cmd).toLowerCase() === 'stop';
+  const row = document.createElement('div');
+  row.className = 'pad-live-entry' + (isStop ? ' is-stop' : '');
+  row.innerHTML = `
+    <span class="pad-live-badge">${String(cmd).toUpperCase()}${viaDemo ? ' (demo)' : ''}</span>
+    <span class="pad-live-time">${padLiveTimestamp()}</span>
+  `;
+  padLiveList.insertBefore(row, padLiveList.firstChild);
+
+  while (padLiveList.querySelectorAll('.pad-live-entry').length > MAX_PAD_LIVE_ENTRIES) {
+    const last = padLiveList.querySelector('.pad-live-entry:last-child');
+    if (last) last.remove();
+    else break;
+  }
+}
+
+/* ===================== LOFI ROBOT PAD ===================== */
+const PAD_INTERVAL_MS = 120;
+// true = tukar left/right di UART agar cocok motor fisik vs pin MakeCode
+const PAD_SWAP_LEFT_RIGHT = true;
+let padStreamTimer = null;
+let padCurrentCmd = null;
+let padHeld = new Set();
+let padLastLogged = null;
+
+/** Map UI direction → string UART yang dikirim ke micro:bit */
+function resolvePadUartCmd(cmd) {
+  let c = String(cmd ?? '').trim().toLowerCase();
+  if (!c || c === 'stop') return 'stop';
+  if (PAD_SWAP_LEFT_RIGHT) {
+    if (c === 'left') return 'right';
+    if (c === 'right') return 'left';
+  }
+  return c;
+}
+
+async function sendPadCmd(cmd, { silent = false } = {}) {
+  const uartCmd = resolvePadUartCmd(cmd);
+  const suffix = (bleCfg.sendSuffix === '' ? '' : (bleCfg.sendSuffix ?? '\n'));
+  const packet = uartCmd + suffix;
+  const changed = padLastLogged !== uartCmd;
+
+  if (!rxChr) {
+    if (demoMode) {
+      updatePadLiveCurrent(uartCmd, { viaDemo: true });
+      if (!silent || changed) {
+        appendLog(uartCmd + ' (demo)', 'pad');
+        pushPadLiveEntry(uartCmd, { viaDemo: true });
+        padLastLogged = uartCmd;
+      }
+      return;
+    }
+    if (!silent) appendLog('Pad: belum terhubung.', 'system');
+    return;
+  }
+  try {
+    await bleWrite(packet);
+    updatePadLiveCurrent(uartCmd);
+    if (!silent || changed) {
+      appendLog(uartCmd, 'pad');
+      pushPadLiveEntry(uartCmd);
+      padLastLogged = uartCmd;
+    }
+  } catch (e) {
+    appendLog('Gagal pad: ' + (e.message || 'error'), 'error');
+  }
+}
+
+function stopPadStream() {
+  if (padStreamTimer) {
+    clearInterval(padStreamTimer);
+    padStreamTimer = null;
+  }
+}
+
+function startPadStream(cmd) {
+  padCurrentCmd = cmd;
+  stopPadStream();
+  sendPadCmd(cmd, { silent: false });
+  padStreamTimer = setInterval(() => {
+    sendPadCmd(padCurrentCmd, { silent: true });
+  }, PAD_INTERVAL_MS);
+}
+
+function syncPadStream() {
+  if (padHeld.size > 0) {
+    const dirs = [...padHeld];
+    const cmd = dirs[dirs.length - 1];
+    if (padCurrentCmd !== cmd || !padStreamTimer) startPadStream(cmd);
+  } else {
+    if (padCurrentCmd !== 'stop' || !padStreamTimer) startPadStream('stop');
+  }
+}
+
+function padPressDir(code) {
+  if (!code || code === 'STOP') {
+    padHeld.clear();
+    startPadStream('stop');
+    return;
+  }
+  padHeld.add(code);
+  syncPadStream();
+}
+
+function padReleaseDir(code) {
+  if (!code || code === 'STOP') return;
+  padHeld.delete(code);
+  syncPadStream();
+}
+
+(function initBitPad() {
+  const pad = document.getElementById('bitPad');
+  if (!pad) return;
+
+  function bindBtn(btn) {
+    const code = btn.dataset.cmd;
+    if (!code) return;
+    let held = false;
+    const press = (e) => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      if (held) return;
+      held = true;
+      btn.classList.add('pressed');
+      try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+      padPressDir(code);
+      haptic(6);
+    };
+    const release = (e) => {
+      if (!held) return;
+      held = false;
+      btn.classList.remove('pressed');
+      padReleaseDir(code);
+    };
+    btn.addEventListener('pointerdown', press);
+    btn.addEventListener('pointerup', release);
+    btn.addEventListener('pointercancel', release);
+  }
+  pad.querySelectorAll('.bitpad-btn').forEach(bindBtn);
+
+  const keyPress = {
+    ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+    ' ': 'STOP', Enter: 'STOP'
+  };
+  const keyHeld = {};
+  window.addEventListener('keydown', e => {
+    const page = document.getElementById('page-controller');
+    if (!page || !page.classList.contains('active')) return;
+    const cmd = keyPress[e.key];
+    if (!cmd || keyHeld[e.key]) return;
+    e.preventDefault();
+    keyHeld[e.key] = true;
+    const btn = pad.querySelector(`[data-cmd="${cmd}"]`);
+    if (btn) btn.classList.add('pressed');
+    padPressDir(cmd);
+  });
+  window.addEventListener('keyup', e => {
+    const page = document.getElementById('page-controller');
+    if (!page || !page.classList.contains('active')) return;
+    const cmd = keyPress[e.key];
+    if (!cmd || !keyHeld[e.key]) return;
+    e.preventDefault();
+    keyHeld[e.key] = false;
+    const btn = pad.querySelector(`[data-cmd="${cmd}"]`);
+    if (btn) btn.classList.remove('pressed');
+    padReleaseDir(cmd);
+  });
+
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const target = item.getAttribute('data-page');
+      if (target !== 'controller') {
+        padHeld.clear();
+        stopPadStream();
+        padCurrentCmd = null;
+      }
+    });
+  });
+})();
+
+document.getElementById('connectBtn').addEventListener('click', toggleBT);
+document.getElementById('heroConnectBtn').addEventListener('click', toggleBT);
+
+async function handleControlChange(id, v) {
+  const w = widgets.find(x => x.id === id);
+  if (!w) return;
+
+  if (w.control === 'switch') {
+    document.querySelectorAll(`#lbl-${w.id}`).forEach(el => {
+      el.textContent = Number(v) === 1 ? 'Nyala' : 'Mati';
+    });
+  }
+
+  const sep = bleCfg.separator || ',';
+  const suffix = (bleCfg.sendSuffix === '' ? '' : (bleCfg.sendSuffix ?? '\n'));
+  const cmd = `${w.key}${sep}${v}`;
+  const packet = cmd + suffix;
+  if (!rxChr) {
+    if (demoMode) {
+      appendLog(cmd + ' (demo)', 'pad');
+      haptic(6);
+      return;
+    }
+    appendLog('Aksi gagal: Alat belum terhubung.', 'system');
+    return;
+  }
+
+  try {
+    await bleWrite(packet);
+    appendLog(cmd, 'out');
+  } catch (e) {
+    console.warn(e);
+    appendLog('Gagal mengirim: ' + (e.message || 'error'), 'error');
+  }
+}
+
+document.getElementById('logSendBtn').addEventListener('click', async () => {
+  const input = document.getElementById('logInput');
+  const raw = input.value.trim();
+  if (!raw) return;
+  if (!rxChr) {
+    if (demoMode) {
+      appendLog(raw + ' (demo)', 'out');
+      input.value = '';
+      haptic(6);
+      return;
+    }
+    appendLog('Aksi gagal: Alat belum terhubung.', 'system');
+    return;
+  }
+  const suffix = bleCfg.sendSuffix ?? '\n';
+  const already = suffix && (suffix === '\n' ? raw.endsWith('\n') : raw.endsWith(suffix));
+  const cmd = already ? raw : raw + suffix;
+  try {
+    await bleWrite(cmd);
+    appendLog(raw, 'out');
+    input.value = '';
+  } catch (e) {
+    console.warn(e);
+    appendLog('Gagal mengirim: ' + (e.message || 'error'), 'error');
+  }
+});
+
+document.getElementById('logInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') document.getElementById('logSendBtn').click();
+});
+
+/* ========== TEACHABLE MACHINE ========== */
+const TM_CONF_THRESHOLD = 0.85;
+let tmModel = null;
+let tmWebcam = null;
+let tmMaxPredictions = 0;
+let tmRunning = false;
+let tmRafId = null;
+let tmLastSentClass = null;
+let tmLastSentAt = 0;
+const TM_RESEND_MS = 250; // stream ringan saat kelas sama tetap ≥85%
+
+function tmNormalizeModelUrl(raw) {
+  let u = String(raw || '').trim();
+  if (!u) return '';
+  // Allow paste of full model.json / share URL
+  u = u.replace(/\/model\.json\s*$/i, '/').replace(/\/metadata\.json\s*$/i, '/');
+  if (!u.endsWith('/')) u += '/';
+  // Extract from teachablemachine.withgoogle.com/models/ID/...
+  const m = u.match(/(https?:\/\/teachablemachine\.withgoogle\.com\/models\/[^/]+\/?)/i);
+  if (m) {
+    let base = m[1];
+    if (!base.endsWith('/')) base += '/';
+    return base;
+  }
+  return u;
+}
+
+function tmSetStatus(text, kind) {
+  const el = document.getElementById('tmStatus');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.remove('is-live', 'is-err');
+  if (kind === 'live') el.classList.add('is-live');
+  if (kind === 'err') el.classList.add('is-err');
+}
+
+function tmBuildBars(n) {
+  const host = document.getElementById('tmBars');
+  if (!host) return;
+  host.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const row = document.createElement('div');
+    row.className = 'tm-bar-row';
+    row.innerHTML = `
+      <div class="tm-bar-meta"><span class="tm-bar-name">class ${i}</span><span class="tm-bar-pct">0%</span></div>
+      <div class="tm-bar-track"><div class="tm-bar-fill" style="width:0%"></div></div>
+    `;
+    host.appendChild(row);
+  }
+}
+
+async function tmSendClass(className, { force = false } = {}) {
+  const cmd = String(className || '').trim();
+  if (!cmd) return;
+  const now = Date.now();
+  if (!force && tmLastSentClass === cmd && (now - tmLastSentAt) < TM_RESEND_MS) return;
+
+  const suffix = (typeof bleCfg !== 'undefined' && bleCfg.sendSuffix === '')
+    ? ''
+    : ((typeof bleCfg !== 'undefined' ? bleCfg.sendSuffix : null) ?? '\n');
+  const packet = cmd + suffix;
+
+  const markSent = () => {
+    tmLastSentClass = cmd;
+    tmLastSentAt = now;
+    const lastEl = document.getElementById('tmLastSent');
+    if (lastEl) lastEl.textContent = `Terkirim ke micro:bit: ${cmd}`;
+  };
+
+  if (!rxChr) {
+    if (typeof demoMode !== 'undefined' && demoMode) {
+      appendLog(cmd + ' (tm/demo)', 'pad');
+      markSent();
+      return;
+    }
+    // Tetap catat di log sekali saat ganti kelas (tanpa flood)
+    if (tmLastSentClass !== cmd) {
+      appendLog('TM: ' + cmd + ' (belum terhubung BT)', 'system');
+      markSent();
+    }
+    return;
+  }
+  try {
+    await bleWrite(packet);
+    appendLog(cmd, 'pad');
+    markSent();
+  } catch (e) {
+    appendLog('TM gagal kirim: ' + (e.message || 'error'), 'error');
+  }
+}
+
+async function tmPredict() {
+  if (!tmModel || !tmWebcam || !tmRunning) return;
+  const prediction = await tmModel.predict(tmWebcam.canvas);
+  let best = null;
+  const rows = document.querySelectorAll('#tmBars .tm-bar-row');
+  for (let i = 0; i < prediction.length; i++) {
+    const p = prediction[i];
+    const pct = p.probability * 100;
+    if (rows[i]) {
+      rows[i].querySelector('.tm-bar-name').textContent = p.className;
+      rows[i].querySelector('.tm-bar-pct').textContent = pct.toFixed(1) + '%';
+      const fill = rows[i].querySelector('.tm-bar-fill');
+      fill.style.width = Math.min(100, pct).toFixed(1) + '%';
+      fill.classList.toggle('pass', p.probability >= TM_CONF_THRESHOLD);
+    }
+    if (!best || p.probability > best.probability) best = p;
+  }
+
+  const valEl = document.getElementById('tmPredValue');
+  const confEl = document.getElementById('tmPredConf');
+  if (best && best.probability >= TM_CONF_THRESHOLD) {
+    if (valEl) valEl.textContent = best.className;
+    if (confEl) {
+      confEl.textContent = (best.probability * 100).toFixed(1) + '% · dikirim';
+      confEl.classList.remove('low');
+      confEl.classList.add('ok');
+    }
+    await tmSendClass(best.className);
+  } else {
+    // Di bawah ambang: tampilkan prediksi mentah, tapi tetap pakai last sent
+    if (valEl) {
+      valEl.textContent = tmLastSentClass
+        ? tmLastSentClass
+        : (best ? best.className : '—');
+    }
+    if (confEl) {
+      const raw = best ? (best.probability * 100).toFixed(1) + '%' : '0%';
+      confEl.textContent = tmLastSentClass
+        ? raw + ' · <85%, tetap: ' + tmLastSentClass
+        : raw + ' · di bawah 85%';
+      confEl.classList.remove('ok');
+      confEl.classList.add('low');
+    }
+  }
+}
+
+async function tmLoop() {
+  if (!tmRunning) return;
+  if (tmWebcam) tmWebcam.update();
+  try { await tmPredict(); } catch (e) { console.warn('tmPredict', e); }
+  tmRafId = window.requestAnimationFrame(tmLoop);
+}
+
+async function tmStart() {
+  const raw = document.getElementById('tmModelUrl')?.value || '';
+  const base = tmNormalizeModelUrl(raw);
+  if (!base) {
+    tmSetStatus('Masukkan URL model Teachable Machine yang valid.', 'err');
+    return;
+  }
+  if (typeof tmImage === 'undefined') {
+    tmSetStatus('Library Teachable Machine belum termuat. Cek koneksi internet.', 'err');
+    return;
+  }
+
+  document.getElementById('tmStartBtn').disabled = true;
+  tmSetStatus('Memuat model…', null);
+
+  try {
+    const modelURL = base + 'model.json';
+    const metadataURL = base + 'metadata.json';
+    tmModel = await tmImage.load(modelURL, metadataURL);
+    tmMaxPredictions = tmModel.getTotalClasses();
+    tmBuildBars(tmMaxPredictions);
+
+    // Webcam
+    if (tmWebcam) {
+      try { tmWebcam.stop(); } catch (_) {}
+      tmWebcam = null;
+    }
+    tmWebcam = new tmImage.Webcam(320, 320, true);
+    await tmWebcam.setup(); // minta izin kamera
+    await tmWebcam.play();
+
+    const box = document.getElementById('tmWebcamBox');
+    const ph = document.getElementById('tmWebcamPlaceholder');
+    if (ph) ph.remove();
+    // bersihkan canvas lama
+    box.querySelectorAll('canvas').forEach(c => c.remove());
+    box.appendChild(tmWebcam.canvas);
+
+    tmRunning = true;
+    tmLastSentClass = null;
+    tmLastSentAt = 0;
+    document.getElementById('tmStopBtn').disabled = false;
+    tmSetStatus('Live · ambang 85% · model: ' + base, 'live');
+    appendLog('Teachable Machine aktif: ' + base, 'system');
+    if (typeof showToast === 'function') {
+      showToast({ title: 'Teachable AI aktif', body: 'Prediksi ≥85% dikirim ke micro:bit.', icon: 'camera', duration: 3500 });
+    }
+    tmRafId = window.requestAnimationFrame(tmLoop);
+  } catch (err) {
+    console.warn(err);
+    document.getElementById('tmStartBtn').disabled = false;
+    tmSetStatus('Gagal memuat model/kamera: ' + (err?.message || 'error'), 'err');
+    appendLog('TM error: ' + (err?.message || 'gagal'), 'error');
+  }
+}
+
+function tmStop() {
+  tmRunning = false;
+  if (tmRafId) {
+    cancelAnimationFrame(tmRafId);
+    tmRafId = null;
+  }
+  if (tmWebcam) {
+    try { tmWebcam.stop(); } catch (_) {}
+    tmWebcam = null;
+  }
+  const box = document.getElementById('tmWebcamBox');
+  if (box) {
+    box.querySelectorAll('canvas').forEach(c => c.remove());
+    if (!document.getElementById('tmWebcamPlaceholder')) {
+      const ph = document.createElement('div');
+      ph.className = 'tm-webcam-placeholder';
+      ph.id = 'tmWebcamPlaceholder';
+      ph.textContent = 'Kamera dimatikan';
+      box.appendChild(ph);
+    }
+  }
+  document.getElementById('tmStartBtn').disabled = false;
+  document.getElementById('tmStopBtn').disabled = true;
+  tmSetStatus('Dihentikan.', null);
+  appendLog('Teachable Machine dihentikan.', 'system');
+}
+
+document.getElementById('tmStartBtn')?.addEventListener('click', tmStart);
+document.getElementById('tmStopBtn')?.addEventListener('click', tmStop);
+document.getElementById('tmModelUrl')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') tmStart();
+});
+
+/* ========== INTRO ANIMATION ========== */
+(function bootIntro() {
+  const app = document.querySelector('.app');
+  const reduce = document.documentElement.classList.contains('reduce-motion')
+    || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const finish = () => {
+    if (typeof hideLoader === 'function') hideLoader();
+    if (app) app.classList.add('is-ready');
+    setTimeout(() => {
+      showToast({
+        title: 'Selamat datang di ACH Project',
+        body: 'Tarik widget untuk menyusun ulang. Sambungkan micro:bit lewat Bluetooth.',
+        icon: 'bluetooth',
+        duration: 6000
+      });
+    }, 400);
+    setTimeout(() => {
+      showToast({
+        title: 'Tips cepat',
+        body: 'Format data: suhu,24.5 — key,value diakhiri baris baru. Dark mode di Pengaturan.',
+        icon: 'activity',
+        duration: 5500
+      });
+    }, 2600);
+  };
+
+  if (reduce) {
+    if (app) app.classList.add('is-ready');
+    setTimeout(() => {
+      showToast({
+        title: 'Selamat datang di ACH Project',
+        body: 'Tarik widget untuk menyusun ulang. Sambungkan micro:bit lewat Bluetooth.',
+        icon: 'bluetooth',
+        duration: 5000
+      });
+    }, 300);
+    return;
+  }
+
+  showLoader('ACH Project', 'Menyiapkan antarmuka…');
+  setLoaderText('ACH Project', 'kendali micro:bit');
+  setTimeout(finish, 1750);
+
+  setTimeout(() => {
+    if (app && !app.classList.contains('is-ready')) {
+      app.classList.add('is-ready');
+      if (typeof hideLoader === 'function') hideLoader();
+    }
+  }, 4000);
+})();
+</script>
+</body>
+</html>

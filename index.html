@@ -2261,10 +2261,10 @@ body.is-dragging * { cursor: grabbing !important; }
                 </div>
                 <div>
                   <h2>Capit / Gripper</h2>
-                  <p>Klik sekali = hold · klik lagi = stop</p>
+                  <p>Klik sekali = hold · klik lagi = lepas</p>
                 </div>
               </div>
-              <button type="button" class="gripper-btn" id="gripperBtn" data-cmd="capit" aria-label="Capit" title="Klik: capit hold · Klik lagi: stop">
+              <button type="button" class="gripper-btn" id="gripperBtn" data-cmd="capit" aria-label="Capit" title="Klik: capit hold · Klik lagi: lepas">
                 <span class="gc-ring"></span>
                 <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M18 20c-4 0-8 3.2-8 8v6c0 5 3.5 8 8 8"/>
@@ -2276,8 +2276,8 @@ body.is-dragging * { cursor: grabbing !important; }
                 </svg>
                 <span class="gc-label">Capit</span>
               </button>
-              <div class="gripper-status" id="gripperStatus">idle · lepas</div>
-              <p class="gripper-note">Klik → <code>capit</code> terus (120ms) · klik lagi → <code>stop</code></p>
+              <div class="gripper-status" id="gripperStatus">idle · siap</div>
+              <p class="gripper-note">Klik → <code>capit</code> terus (120ms) · klik lagi → <code>lepas</code></p>
             </div>
 
             <div class="pad-live-card apple-card" id="padLiveCard">
@@ -4211,7 +4211,7 @@ function pushPadLiveEntry(cmd, { viaDemo = false } = {}) {
 /* ===================== LOFI ROBOT PAD ===================== */
 const PAD_INTERVAL_MS = 120;
 // true = tukar left/right di UART agar cocok motor fisik vs pin MakeCode
-const PAD_SWAP_LEFT_RIGHT = true;
+const PAD_SWAP_LEFT_RIGHT = false;
 let padStreamTimer = null;
 let padCurrentCmd = null;
 let padHeld = new Set();
@@ -4331,15 +4331,24 @@ function padReleaseDir(code) {
   }
   pad.querySelectorAll('.bitpad-btn').forEach(bindBtn);
 
-  /* Gripper / Capit — toggle: klik = hold stream capit, klik lagi = stop */
+  /* Gripper / Capit — toggle: klik = stream "capit", klik lagi = kirim "lepas" (bukan stop) */
   const grip = document.getElementById('gripperBtn');
   const gripStatus = document.getElementById('gripperStatus');
   if (grip) {
     let gOn = false;
+    let gripTimer = null;
+    const stopGripStream = () => {
+      if (gripTimer) { clearInterval(gripTimer); gripTimer = null; }
+    };
+    const startGripStream = (cmd) => {
+      stopGripStream();
+      sendPadCmd(cmd, { silent: false });
+      gripTimer = setInterval(() => sendPadCmd(cmd, { silent: true }), PAD_INTERVAL_MS);
+    };
     const setGripUI = (on) => {
       grip.classList.toggle('pressed', on);
       if (gripStatus) {
-        gripStatus.textContent = on ? 'mencapit · aktif' : 'idle · lepas';
+        gripStatus.textContent = on ? 'mencapit · aktif' : 'idle · siap';
         gripStatus.classList.toggle('on', on);
       }
     };
@@ -4347,11 +4356,13 @@ function padReleaseDir(code) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
       gOn = !gOn;
       if (gOn) {
-        padPressDir('capit');
+        // jangan pakai padHeld biar lepas tidak memicu "stop" global
+        startGripStream('capit');
         setGripUI(true);
         haptic(8);
       } else {
-        padReleaseDir('capit');
+        stopGripStream();
+        sendPadCmd('lepas', { silent: false }); // lepas capit, bukan stop motor
         setGripUI(false);
         haptic(4);
       }

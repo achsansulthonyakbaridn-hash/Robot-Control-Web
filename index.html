@@ -7,9 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 <style>
 /* =========================================================
    ACH Project — Interactive Executive Design System
@@ -101,7 +98,6 @@ html, body { height: 100%; }
 body {
   background: var(--bg);
   background-image: var(--bg-mesh);
-  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font);
   -webkit-font-smoothing: antialiased;
@@ -258,15 +254,6 @@ body.is-dragging .cursor-ring { opacity: 0.35; }
   0%, 100% { box-shadow: 0 0 0 0 rgba(122,158,126,0); }
   50% { box-shadow: 0 0 0 5px rgba(122,158,126,0.2); }
 }
-@keyframes revealLine {
-  from { clip-path: inset(0 100% 0 0); opacity: 0.4; }
-  to   { clip-path: inset(0 0 0 0); opacity: 1; }
-}
-@keyframes heroFloat {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-6px) rotate(0.5deg); }
-}
-
 html.reduce-motion *,
 html.reduce-motion *::before,
 html.reduce-motion *::after {
@@ -278,10 +265,6 @@ html.reduce-motion *::after {
 .widget-card.stagger-in {
   animation: widgetStagger 0.55s var(--ease-out) both;
 }
-.stat-card.live-pulse .stat-dot {
-  animation: livePulse 1.8s ease-in-out infinite;
-}
-
 /* ========== GLASS ========== */
 .glass {
   background: var(--glass);
@@ -300,8 +283,6 @@ html.reduce-motion *::after {
 
 .apple-card {
   background: var(--surface-solid);
-  backdrop-filter: blur(24px) saturate(140%);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border);
@@ -595,11 +576,6 @@ html.reduce-motion *::after {
   font-size: 20px; font-weight: 600; letter-spacing: -0.02em;
 }
 .section-heading span { font-size: 13px; color: var(--text-muted); font-weight: 500; }
-.section-heading .hint {
-  font-size: 11.5px; color: var(--text-faint);
-  background: var(--surface-2); padding: 4px 10px; border-radius: 8px;
-}
-
 .grid-widgets {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
@@ -823,43 +799,18 @@ html.reduce-motion *::after {
   flex-direction: column;
   padding: 16px 20px;
   gap: 9px;
-  scroll-behavior: smooth;
 }
-.log-entry {
-  display: flex; flex-direction: column; gap: 4px;
-  font-size: 12.5px; padding: 11px 14px; border-radius: 12px;
-  background: var(--surface-solid); border: 1px solid var(--border);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  animation: logPop 0.4s var(--ease-heavy);
-  flex-shrink: 0;
-  max-width: 100%;
-}
-.log-entry.in { border-left: 3px solid var(--input-c); }
-.log-entry.out { border-left: 3px solid var(--output-c); }
 .log-entry.system {
   background: transparent; border: none; box-shadow: none;
   align-items: center; color: var(--text-muted); text-align: center;
   font-style: italic; padding: 8px;
 }
-.log-entry .m {
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  color: var(--text);
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-}
-.log-entry .t { font-size: 10.5px; color: var(--text-muted); }
 
 .log-empty {
   color: var(--text-muted); font-size: 13.5px; text-align: center;
   padding: 44px 22px; line-height: 1.5;
   flex-shrink: 0;
 }
-.log-feed[data-view="in"] .log-entry.out,
-.log-feed[data-view="in"] .log-entry.system { display: none; }
-.log-feed[data-view="out"] .log-entry.in,
-.log-feed[data-view="out"] .log-entry.system { display: none; }
 
 .log-tester {
   padding: 12px 16px 16px;
@@ -1094,6 +1045,9 @@ body.is-dragging * { cursor: grabbing !important; }
   visibility: visible;
   pointer-events: auto;
 }
+.loader-overlay:not(.show) { display: none; }
+.loader-overlay.show:not(.hiding) { animation: loaderIn 0.4s var(--ease-out); }
+@keyframes loaderIn { from { opacity: 0; } to { opacity: 1; } }
 .loader-overlay.hiding {
   animation: loaderOut 0.4s var(--ease-out) forwards;
 }
@@ -1293,7 +1247,6 @@ body.is-dragging * { cursor: grabbing !important; }
 }
 
 /* ========== PAGE TRANSITIONS ========== */
-.pages { position: relative; }
 .page {
   display: none;
   pointer-events: none;
@@ -1896,11 +1849,16 @@ body.is-dragging * { cursor: grabbing !important; }
 }
 .log-entry {
   display: flex; flex-direction: column; gap: 3px;
-  padding: 9px 11px;
+  font-size: 12.5px; padding: 9px 11px;
   border-radius: 10px;
   background: var(--surface-2);
+  border: 1px solid var(--border);
   border-left: 3px solid transparent;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   animation: logPop 0.25s var(--ease-out);
+  flex-shrink: 0;
+  max-width: 100%;
+  cursor: pointer;
 }
 .log-entry .log-row-top {
   display: flex; align-items: center; gap: 7px;
@@ -1917,7 +1875,8 @@ body.is-dragging * { cursor: grabbing !important; }
 .log-badge.pad { background: rgba(196,168,106,0.16); color: var(--brand); }
 .log-entry .m {
   font-family: var(--font-mono); font-size: 11.5px; font-weight: 500;
-  word-break: break-all; color: var(--text); flex: 1;
+  word-break: break-all; overflow-wrap: anywhere; white-space: pre-wrap;
+  color: var(--text); flex: 1;
 }
 .log-entry .t {
   font-size: 9.5px; color: var(--text-faint); font-variant-numeric: tabular-nums;
@@ -2037,6 +1996,171 @@ body.is-dragging * { cursor: grabbing !important; }
   .stats-row { grid-template-columns: 1fr; }
   .status-bar { flex-direction: column; text-align: center; gap: 14px; }
 }
+
+/* =========================================================
+   SMART PARKING
+   ========================================================= */
+#page-parking {
+  --pk-red: #E0594F;
+  --pk-red-line: rgba(224, 89, 79, 0.6);
+  --pk-red-tint: rgba(224, 89, 79, 0.13);
+  --pk-green: #5FAE72;
+  --pk-green-line: rgba(95, 174, 114, 0.5);
+  --pk-green-tint: rgba(95, 174, 114, 0.1);
+}
+.pk-wrap { display: flex; flex-direction: column; gap: 18px; padding-bottom: 30px; }
+.pk-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.pk-stat { padding: 18px 22px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.pk-stat .lbl { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+.pk-stat .val { font-family: var(--font-serif); font-size: 34px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; }
+.pk-stat.busy .val { color: var(--pk-red); }
+.pk-stat.free .val { color: var(--pk-green); }
+
+.pk-main { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 18px; align-items: start; }
+.pk-bottom { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); gap: 18px; align-items: start; }
+.pk-card { padding: 22px; }
+.pk-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.pk-card-head h3 { font-family: var(--font-serif); font-size: 18px; font-weight: 600; }
+.pk-card-head p { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+.pk-card-head .btn { padding: 9px 16px; font-size: 13px; white-space: nowrap; }
+.pk-card-head .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ---- slot ---- */
+.pk-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 12px; }
+.pk-slot {
+  border-radius: var(--radius); padding: 10px 10px 12px;
+  border: 1.5px solid var(--pk-green-line); background: var(--pk-green-tint);
+  position: relative; user-select: none;
+  transition: border-color .35s, background .35s, box-shadow .35s;
+}
+.pk-slot.is-busy { border-color: var(--pk-red-line); background: var(--pk-red-tint); box-shadow: 0 0 24px rgba(224,89,79,.12); }
+
+.pk-add-bar {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: end;
+  margin: 0 0 14px; padding: 12px; border-radius: 14px;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+}
+.pk-add-bar label {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 11px; color: var(--text-muted); font-weight: 600;
+}
+.pk-add-bar input {
+  background: var(--surface-2, #16181d); color: var(--text);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 8px 10px; font: inherit; width: 110px;
+}
+.pk-slot .pk-slot-x {
+  position: absolute; top: 8px; right: 8px;
+  width: 28px; height: 28px; border: none; border-radius: 8px;
+  background: rgba(0,0,0,0.35); color: var(--text-muted);
+  cursor: pointer; font-size: 14px; line-height: 1;
+  z-index: 2;
+}
+.pk-slot .pk-slot-x:hover { background: var(--pk-red-tint, rgba(196,92,84,0.25)); color: var(--pk-red, #C45C54); }
+.pk-slot .pk-slot-x:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.pk-slot-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
+.pk-slot-name { font-weight: 600; }
+.pk-slot-pin { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-muted); background: rgba(255,255,255,.06); padding: 2px 7px; border-radius: 6px; }
+.pk-bay {
+  position: relative; height: 150px; border-radius: 10px; overflow: hidden;
+  border: 1.5px dashed rgba(255,255,255,.16);
+  display: flex; align-items: center; justify-content: center;
+}
+.pk-free-txt { font-size: 15px; font-weight: 600; color: var(--pk-green); transition: opacity .3s; }
+.pk-slot.is-busy .pk-free-txt { opacity: 0; }
+.pk-car {
+  position: absolute; left: 50%; top: 50%; width: 58px; color: var(--pk-red);
+  transform: translate(-50%, 70%); opacity: 0;
+  transition: transform .7s var(--ease-out), opacity .4s;
+}
+.pk-slot.is-busy .pk-car { transform: translate(-50%, -50%); opacity: 1; }
+.pk-slot-bot { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 10px; font-size: 11.5px; color: var(--text-muted); }
+.pk-slot-bot .pk-lamp { font-weight: 600; color: var(--text); }
+
+/* ---- gate / camera ---- */
+.pk-chip { font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 99px; background: var(--surface-3); color: var(--text-muted); white-space: nowrap; }
+.pk-chip[data-tone="free"] { background: var(--pk-green-tint); color: var(--pk-green); }
+.pk-chip[data-tone="busy"] { background: var(--pk-red-tint); color: var(--pk-red); }
+.pk-chip[data-tone="wait"] { background: var(--brand-tint); color: var(--brand); }
+.pk-cam { position: relative; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background: #050506; border: 1px solid var(--border); }
+.pk-cam video { width: 100%; height: 100%; object-fit: cover; display: none; }
+.pk-cam.on video { display: block; }
+.pk-cam-ph { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-faint); font-size: 13px; }
+.pk-cam.on .pk-cam-ph { display: none; }
+.pk-cam-badge { position: absolute; left: 10px; bottom: 10px; font-family: var(--font-mono); font-size: 11.5px; padding: 4px 9px; border-radius: 8px; background: rgba(0,0,0,.6); color: var(--text); display: none; }
+.pk-cam.on .pk-cam-badge { display: block; }
+.pk-gate-row { display: flex; align-items: flex-end; gap: 16px; margin: 10px 0 0; }
+.pk-gate-row .pk-gate-status { padding-bottom: 14px; }
+.pk-gate-status { font-size: 14px; font-weight: 550; line-height: 1.4; }
+.pk-barrier { position: relative; width: 100px; height: 124px; flex-shrink: 0; }
+.pk-post { position: absolute; left: 0; bottom: 0; width: 18px; height: 48px; border-radius: 6px; background: var(--surface-3); border: 1px solid var(--border-strong); }
+.pk-arm {
+  position: absolute; left: 12px; top: 80px; width: 84px; height: 8px; border-radius: 4px;
+  background: repeating-linear-gradient(90deg, #E8E4DC 0 12px, var(--pk-red) 12px 24px);
+  transform-origin: 6px 50%; transition: transform .9s var(--ease-heavy);
+}
+.pk-barrier.open .pk-arm { transform: rotate(-70deg); }
+.pk-ctrl { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 8px; }
+.pk-ctrl .field.wide { grid-column: 1 / -1; }
+.pk-ctrl .field input[type="range"] { padding: 0; height: 28px; background: transparent; accent-color: var(--brand); appearance: auto; -webkit-appearance: auto; }
+.pk-btns { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.pk-btns .btn { padding: 9px 14px; font-size: 13px; }
+.pk-btns .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+.pk-hint { font-size: 12px; color: var(--text-muted); margin-top: 12px; line-height: 1.5; }
+.pk-hint code, .pk-preview code { font-family: var(--font-mono); background: var(--surface-2); padding: 2px 7px; border-radius: 6px; color: var(--brand); font-size: 12px; }
+
+/* ---- config ---- */
+.pk-cfg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pk-preview { grid-column: 1 / -1; font-size: 12.5px; color: var(--text-muted); }
+.pk-rows { display: flex; flex-direction: column; gap: 8px; margin: 18px 0 14px; }
+.pk-row, .pk-row-head { display: grid; grid-template-columns: 70px 1fr 1fr 36px; gap: 10px; align-items: center; }
+.pk-row-head { font-size: 12px; color: var(--text-muted); font-weight: 550; padding: 0 2px; }
+.pk-row-name { font-size: 13.5px; font-weight: 600; }
+.pk-row input { width: 100%; background: var(--surface-2); border: none; color: var(--text); padding: 10px 12px; border-radius: 10px; font-size: 14px; font-family: var(--font-mono); }
+.pk-row input:focus { outline: none; box-shadow: 0 0 0 3px var(--brand-tint); }
+.pk-del { width: 36px; height: 36px; border: none; border-radius: 10px; background: var(--surface-2); color: var(--text-muted); cursor: pointer; font-size: 13px; transition: background .25s, color .25s; }
+.pk-del:hover:not(:disabled) { background: var(--pk-red-tint); color: var(--pk-red); }
+.pk-del:disabled { opacity: .35; cursor: not-allowed; }
+.pk-toggles { display: flex; flex-direction: column; gap: 14px; margin-top: 6px; }
+.pk-toggles .toggle-row span.t { font-weight: 500; font-size: 14px; }
+.pk-toggles .toggle-row small { display: block; color: var(--text-muted); font-size: 12px; margin-top: 2px; font-weight: 400; }
+.pk-code-box { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; }
+.pk-code-box summary { cursor: pointer; font-size: 13.5px; font-weight: 600; }
+.pk-code-box pre { margin: 12px 0; padding: 14px; border-radius: 12px; background: var(--surface-2); font-family: var(--font-mono); font-size: 11.5px; line-height: 1.55; overflow-x: auto; max-height: 280px; color: var(--text); }
+
+/* ---- realtime ---- */
+.pk-now { padding: 16px 18px; border-radius: 14px; background: var(--surface-2); border-left: 3px solid var(--text-faint); margin-bottom: 12px; }
+.pk-now[data-tone="wait"] { border-color: var(--brand); background: var(--brand-tint); }
+.pk-now[data-tone="busy"] { border-color: var(--pk-red); }
+.pk-now[data-tone="free"] { border-color: var(--pk-green); }
+.pk-now-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+.pk-now-text { font-family: var(--font-serif); font-size: 20px; font-weight: 600; line-height: 1.25; }
+.pk-sent { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 12px 18px; border-radius: 14px; background: var(--surface-2); margin-bottom: 14px; font-size: 13px; color: var(--text-muted); }
+.pk-sent b { color: var(--text); font-size: 17px; font-family: var(--font-serif); }
+.pk-feed { display: flex; flex-direction: column; gap: 2px; max-height: 330px; overflow-y: auto; }
+.pk-feed-empty { padding: 26px 10px; text-align: center; color: var(--text-faint); font-size: 13px; }
+.pk-feed-row { display: grid; grid-template-columns: 10px 1fr auto; gap: 10px; align-items: center; padding: 8px 4px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.pk-feed-row .pk-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-faint); }
+.pk-feed-time { font-family: var(--font-mono); font-size: 11px; color: var(--text-faint); }
+.t-in .pk-dot { background: var(--pk-red); }
+.t-out .pk-dot { background: var(--pk-green); }
+.t-send .pk-dot { background: var(--brand); }
+.t-send .pk-feed-text { font-weight: 600; }
+.t-gate .pk-dot { background: var(--input-c); }
+.t-wait .pk-dot { background: var(--brand); animation: pkPulse 1.2s ease-in-out infinite; }
+.t-err .pk-dot { background: var(--danger); }
+@keyframes pkPulse { 50% { opacity: .25; } }
+
+@media (max-width: 560px) {
+  .pk-stats { grid-template-columns: 1fr; }
+  .pk-cfg-grid { grid-template-columns: 1fr; }
+  .pk-row, .pk-row-head { grid-template-columns: 56px 1fr 1fr 36px; gap: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pk-car, .pk-arm, .pk-slot { transition: none; }
+  .t-wait .pk-dot { animation: none; }
+}
 </style>
 </head>
 <body>
@@ -2071,6 +2195,10 @@ body.is-dragging * { cursor: grabbing !important; }
       <li class="nav-item" data-page="teachable">
         <span class="nav-icon" data-icon="camera"></span>
         <span class="nav-label">Teachable AI</span>
+      </li>
+      <li class="nav-item" data-page="parking">
+        <span class="nav-icon" data-icon="car"></span>
+        <span class="nav-label">Smart Parking</span>
       </li>
       <li class="nav-item" data-page="tutorial">
         <span class="nav-icon" data-icon="book"></span>
@@ -2334,6 +2462,161 @@ body.is-dragging * { cursor: grabbing !important; }
             <div class="tm-bars" id="tmBars"></div>
             <div class="tm-last-sent" id="tmLastSent">Belum ada data terkirim ke micro:bit.</div>
           </div>
+        </div>
+      </section>
+
+      <!-- SMART PARKING -->
+      <section class="page" id="page-parking">
+        <div class="pk-wrap">
+
+          <div class="pk-stats">
+            <div class="pk-stat apple-card"><span class="lbl">Total slot</span><span class="val" id="pkStatTotal">0</span></div>
+            <div class="pk-stat apple-card busy"><span class="lbl">Terisi</span><span class="val" id="pkStatBusy">0</span></div>
+            <div class="pk-stat apple-card free"><span class="lbl">Kosong</span><span class="val" id="pkStatFree">0</span></div>
+          </div>
+
+          <div class="pk-main">
+            <div class="pk-card apple-card">
+              <div class="pk-card-head">
+                <div>
+                  <h3>Area parkir</h3>
+                  <p>Slot berubah merah + gambar mobil saat sensor mendeteksi, hijau saat kosong. Status tidak bisa diklik manual.</p>
+                </div>
+                <span class="pk-chip" id="pkSlotCap" data-tone="idle">0 / 10 slot</span>
+              </div>
+              <div class="pk-add-bar" id="pkAddBar">
+                <label>Pin IOBit
+                  <input list="pkPins" id="pkNewPin" maxlength="8" placeholder="P0" spellcheck="false" autocomplete="off">
+                </label>
+                <label>Kode kirim (1–99)
+                  <input type="number" id="pkNewCode" min="1" max="99" value="1">
+                </label>
+                <button type="button" class="btn primary magnetic" id="pkAddSlot">+ Tambah slot</button>
+              </div>
+              <div class="pk-slots" id="pkSlots"></div>
+              <p class="pk-hint">Hapus slot lewat tombol ✕ di kartu. Status terisi/kosong hanya dari sensor micro:bit.</p>
+            </div>
+
+            <div class="pk-card apple-card">
+              <div class="pk-card-head">
+                <div>
+                  <h3>Gerbang &amp; kamera</h3>
+                  <p>Kamera di depan parkiran. Gerbang terbuka saat ada mobil menunggu.</p>
+                </div>
+                <span class="pk-chip" id="pkGateChip" data-tone="idle">Tertutup</span>
+              </div>
+              <div class="pk-cam" id="pkCam">
+                <video id="pkVideo" playsinline muted></video>
+                <div class="pk-cam-ph">Kamera belum aktif</div>
+                <div class="pk-cam-badge" id="pkCamBadge">—</div>
+              </div>
+              <div class="pk-gate-row">
+                <div class="pk-barrier" id="pkBarrier"><div class="pk-post"></div><div class="pk-arm"></div></div>
+                <div class="pk-gate-status" id="pkGateStatus" aria-live="polite">Gerbang tertutup. Menunggu kendaraan.</div>
+              </div>
+              <div class="pk-ctrl">
+                <div class="field">
+                  <label for="pkMode">Cara deteksi mobil</label>
+                  <select id="pkMode">
+                    <option value="motion">Kamera biasa (bandingkan gerbang kosong)</option>
+                    <option value="tm">Teachable Machine</option>
+                  </select>
+                </div>
+                <div class="field" id="pkSensField">
+                  <label for="pkSens">Sensitivitas</label>
+                  <input type="range" id="pkSens" min="1" max="100" value="50">
+                </div>
+                <div class="field wide" id="pkTmFields" hidden>
+                  <label for="pkTmUrl">URL model Teachable Machine</label>
+                  <input type="url" id="pkTmUrl" placeholder="https://teachablemachine.withgoogle.com/models/xxxx/" spellcheck="false" autocomplete="off">
+                </div>
+                <div class="field" id="pkTmClassField" hidden>
+                  <label for="pkTmClass">Nama kelas mobil</label>
+                  <input type="text" id="pkTmClass" value="mobil" spellcheck="false" autocomplete="off">
+                </div>
+              </div>
+              <div class="toggle-row" style="margin:14px 0 0;">
+                <span style="font-weight:500;font-size:14px;">Buka gerbang otomatis</span>
+                <label class="toggle"><input type="checkbox" id="pkAutoOpen" checked><span class="track"></span></label>
+              </div>
+              <div class="pk-btns">
+                <button type="button" class="btn primary magnetic" id="pkCamStart">Mulai kamera</button>
+                <button type="button" class="btn magnetic" id="pkCamStop" disabled>Stop</button>
+                <button type="button" class="btn magnetic" id="pkCalib" disabled>Kalibrasi ulang</button>
+                <button type="button" class="btn magnetic" id="pkOpenGate">Buka gerbang</button>
+                <button type="button" class="btn magnetic" id="pkCloseGate">Tutup</button>
+              </div>
+              <p class="pk-hint">Saat kamera mulai, gambar gerbang kosong diambil sebagai acuan. Pastikan tidak ada mobil di depan kamera, atau tekan Kalibrasi ulang.</p>
+            </div>
+          </div>
+
+          <div class="pk-bottom">
+            <div class="pk-card apple-card pk-config">
+              <div class="pk-card-head">
+                <div>
+                  <h3>Pin sensor &amp; data kirim</h3>
+                  <p>Isi pin sesuai kaki IO di IOBIT. Kode kirim bisa diganti 1–99.</p>
+                </div>
+              </div>
+              <div class="pk-cfg-grid">
+                <div class="field">
+                  <label for="pkKey">Kata kunci data</label>
+                  <input type="text" id="pkKey" value="lampu" maxlength="20" spellcheck="false" autocomplete="off">
+                </div>
+                <div class="field">
+                  <label for="pkSep">Pemisah</label>
+                  <select id="pkSep">
+                    <option value="app">Ikut Pengaturan</option>
+                    <option value=",">Koma ( , )</option>
+                    <option value="/">Garis miring ( / )</option>
+                    <option value=":">Titik dua ( : )</option>
+                  </select>
+                </div>
+                <div class="pk-preview">Dikirim saat slot terisi: <code id="pkPreview">lampu,1\n</code></div>
+              </div>
+              <div class="pk-rows">
+                <div class="pk-row-head"><span>Slot</span><span>Pin IO</span><span>Kode kirim</span><span></span></div>
+                <div id="pkRows" style="display:flex;flex-direction:column;gap:8px;"></div>
+              </div>
+              <datalist id="pkPins">
+                <option value="P0"></option><option value="P1"></option><option value="P2"></option><option value="P3"></option>
+                <option value="P4"></option><option value="P5"></option><option value="P6"></option><option value="P7"></option>
+                <option value="P8"></option><option value="P9"></option><option value="P10"></option><option value="P11"></option>
+                <option value="P12"></option><option value="P13"></option><option value="P14"></option><option value="P15"></option>
+                <option value="P16"></option><option value="P19"></option><option value="P20"></option>
+              </datalist>
+              <div class="pk-toggles">
+                <div class="toggle-row" style="margin:0;">
+                  <span class="t">Sensor aktif LOW<small>Nyalakan kalau sensor kirim 0 saat ada mobil (umum di sensor IR).</small></span>
+                  <label class="toggle"><input type="checkbox" id="pkActiveLow"><span class="track"></span></label>
+                </div>
+              </div>
+              <details class="pk-code-box" id="pkCodeBox">
+                <summary>Kode MakeCode untuk micro:bit</summary>
+                <pre id="pkMakecode"></pre>
+                <button type="button" class="btn magnetic" id="pkCopyCode" style="padding:9px 14px;font-size:13px;">Salin kode</button>
+              </details>
+            </div>
+
+            <div class="pk-card apple-card">
+              <div class="pk-card-head">
+                <div>
+                  <h3>Status realtime</h3>
+                  <p>Data dikirim hanya saat slot terisi.</p>
+                </div>
+                <span class="log-live-pill"><span class="log-live-dot"></span> LIVE</span>
+              </div>
+              <div class="pk-now" id="pkNowBox" data-tone="idle">
+                <div class="pk-now-label">Sekarang</div>
+                <div class="pk-now-text" id="pkNow" aria-live="polite">Menunggu kendaraan</div>
+              </div>
+              <div class="pk-sent"><span>Data terakhir dikirim</span><b id="pkLastSent">—</b></div>
+              <div class="pk-feed" id="pkFeed">
+                <div class="pk-feed-empty" id="pkFeedEmpty">Belum ada aktivitas parkir.</div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -2665,6 +2948,7 @@ body.is-dragging * { cursor: grabbing !important; }
 <!-- TOAST TIPS -->
 <div class="toast-stack" id="toastStack"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 <script>
 /* ===================== ICONS ===================== */
 const iconSet = {
@@ -2679,8 +2963,11 @@ const iconSet = {
   sun: '<circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2.5"/><line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>',
   grip: '<circle cx="9" cy="6" r="1.5" fill="currentColor"/><circle cx="15" cy="6" r="1.5" fill="currentColor"/><circle cx="9" cy="12" r="1.5" fill="currentColor"/><circle cx="15" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="18" r="1.5" fill="currentColor"/><circle cx="15" cy="18" r="1.5" fill="currentColor"/>',
   book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>',
+  car: '<path d="M5 17h14M3 13l2-6a2 2 0 0 1 1.9-1.4h10.2A2 2 0 0 1 19 7l2 6v4a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-1H7v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7.5" cy="13" r="1" fill="currentColor"/><circle cx="16.5" cy="13" r="1" fill="currentColor"/>',
   camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" fill="none" stroke="currentColor" stroke-width="2.5"/>'
 };
+
+const escHtml = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function injectIcons(root = document) {
   root.querySelectorAll('[data-icon]').forEach(el => {
@@ -2743,7 +3030,6 @@ injectIcons();
 /* ===================== MAGNETIC BUTTONS ===================== */
 (function initMagnetic() {
   const strength = 0.28;
-  const maxDist = 80;
 
   function bindMagnetic(el) {
     if (el.dataset.magneticBound) return;
@@ -2765,13 +3051,11 @@ injectIcons();
     });
   }
 
-  function scan() {
-    document.querySelectorAll('.magnetic, .btn.primary, .connect-btn').forEach(bindMagnetic);
-  }
-  scan();
-  // re-scan after dynamic renders
-  const obs = new MutationObserver(() => scan());
-  obs.observe(document.body, { childList: true, subtree: true });
+  // bind saat pertama kali disentuh (tanpa MutationObserver)
+  document.addEventListener('pointerover', (e) => {
+    const el = e.target.closest && e.target.closest('.magnetic, .btn.primary, .connect-btn');
+    if (el) bindMagnetic(el);
+  }, true);
 })();
 
 /* ===================== HERO GEO INTERACTION ===================== */
@@ -2801,13 +3085,12 @@ function showToast({ title, body, icon = 'zap', duration = 4500 } = {}) {
   const el = document.createElement('div');
   el.className = 'toast';
   el.innerHTML = `
-    <div class="toast-icon" data-icon="${icon}"></div>
-    <div class="toast-body">
-      <strong>${title}</strong>
-      ${body ? `<span>${body}</span>` : ''}
-    </div>
+    <div class="toast-icon" data-icon="${escHtml(icon)}"></div>
+    <div class="toast-body"><strong></strong>${body ? '<span></span>' : ''}</div>
     <button class="toast-close" aria-label="Tutup">×</button>
   `;
+  el.querySelector('strong').textContent = title ?? '';
+  if (body) el.querySelector('.toast-body span').textContent = body;
   injectIcons(el);
   const close = () => {
     el.classList.add('out');
@@ -2963,6 +3246,7 @@ const pageMeta = {
   widgets:    { title: 'Widget Kustom', sub: 'Bikin kontrol sendiri' },
   controller: { title: 'BT Controller', sub: 'Pad arah & tombol' },
   teachable:  { title: 'Teachable AI', sub: 'Kamera · Teachable Machine' },
+  parking:    { title: 'Smart Parking', sub: 'Sensor slot · Gerbang kamera' },
   tutorial:   { title: 'Tutorial', sub: 'Panduan buat pemula' },
   settings:   { title: 'Pengaturan', sub: 'Tampilan & Bluetooth' }
 };
@@ -3067,24 +3351,11 @@ function appendLog(message, type = 'system') {
     </div>`;
   entry.querySelector('.m').textContent = message;
 
-  entry.style.cursor = 'pointer';
-  entry.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(`[${time}] ${badge} ${message}`);
-      haptic(8);
-      showToast({ title: 'Disalin', body: message, icon: 'activity', duration: 1800 });
-    } catch {
-      showToast({ title: 'Gagal salin', body: 'Clipboard tidak tersedia.', icon: 'activity', duration: 2200 });
-    }
-  });
+  entry.dataset.copy = `[${time}] ${badge} ${message}`;
 
   feed.appendChild(entry);
 
-  while (feed.querySelectorAll('.log-entry').length > MAX_LOG_ENTRIES) {
-    const first = feed.querySelector('.log-entry');
-    if (first) first.remove();
-    else break;
-  }
+  while (feed.childElementCount > MAX_LOG_ENTRIES) feed.firstElementChild.remove();
 
   const countEl = document.getElementById('logCountLabel');
   if (countEl) countEl.textContent = activityHistory.length + ' event';
@@ -3106,6 +3377,18 @@ function appendLog(message, type = 'system') {
     bellBadge.classList.remove('show');
   }
 }
+
+document.getElementById('logFeed')?.addEventListener('click', async (e) => {
+  const entry = e.target.closest('.log-entry');
+  if (!entry || !entry.dataset.copy) return;
+  try {
+    await navigator.clipboard.writeText(entry.dataset.copy);
+    haptic(8);
+    showToast({ title: 'Disalin', body: entry.querySelector('.m')?.textContent || '', icon: 'activity', duration: 1800 });
+  } catch {
+    showToast({ title: 'Gagal salin', body: 'Clipboard tidak tersedia.', icon: 'activity', duration: 2200 });
+  }
+});
 
 function clearActivityHistory() {
   activityHistory.length = 0;
@@ -3238,7 +3521,7 @@ function ingestPacket(line) {
   if (isNaN(v)) return;
   const w = widgets.find(x => x.key === k && x.type === 'input');
   if (!w) return;
-  document.querySelectorAll(`#val-${w.id}`).forEach(el => {
+  document.querySelectorAll(`#val-${w.id}, #val-${w.id}-m`).forEach(el => {
     el.textContent = Number.isInteger(v) ? v : v.toFixed(1);
   });
   const chart = chartInstances[w.id];
@@ -3330,7 +3613,9 @@ function sortedWidgets(type) {
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
-function createWidgetCard(w, { draggable = false } = {}) {
+function createWidgetCard(w, { draggable = false, mirror = false } = {}) {
+  const sx = mirror ? '-m' : '';      // id unik untuk salinan di halaman Widget Kustom
+  const nm = escHtml(w.name);
   const card = document.createElement('div');
   card.className = `widget-card apple-card ${w.type}`;
   card.dataset.id = w.id;
@@ -3339,16 +3624,16 @@ function createWidgetCard(w, { draggable = false } = {}) {
   let body = '';
   if (w.type === 'input') {
     body = `
-      <div class="w-value-row"><div class="w-value" id="val-${w.id}">--</div></div>
-      <div class="sparkline-wrap"><canvas class="sparkline" id="chart-${w.id}"></canvas></div>
+      <div class="w-value-row"><div class="w-value" id="val-${w.id}${sx}">--</div></div>
+      ${mirror ? '' : `<div class="sparkline-wrap"><canvas class="sparkline" id="chart-${w.id}"></canvas></div>`}
     `;
   } else if (w.control === 'switch') {
     body = `
       <div style="font-size:11px;color:var(--text-faint);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;">Digital</div>
       <div class="toggle-row">
-        <span class="toggle-state" id="lbl-${w.id}">Mati</span>
+        <span class="toggle-state" id="lbl-${w.id}${sx}">Mati</span>
         <label class="toggle">
-          <input type="checkbox" id="ctrl-${w.id}">
+          <input type="checkbox" id="ctrl-${w.id}${sx}">
           <span class="track"></span>
         </label>
       </div>
@@ -3356,12 +3641,12 @@ function createWidgetCard(w, { draggable = false } = {}) {
   } else if (w.control === 'button') {
     body = `
       <div style="font-size:11px;color:var(--text-faint);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;">Button</div>
-      <button class="w-btn-hit" id="ctrl-${w.id}" type="button">${w.name}</button>
+      <button class="w-btn-hit" id="ctrl-${w.id}${sx}" type="button">${nm}</button>
     `;
   } else if (w.control === 'dpad') {
     body = `
       <div style="font-size:11px;color:var(--text-faint);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;">D-Pad</div>
-      <div class="w-dpad-mini" id="ctrl-${w.id}">
+      <div class="w-dpad-mini" id="ctrl-${w.id}${sx}">
         <button type="button" class="u" data-dir="up">↑</button>
         <button type="button" class="l" data-dir="left">←</button>
         <button type="button" class="c" data-dir="STOP">●</button>
@@ -3375,10 +3660,10 @@ function createWidgetCard(w, { draggable = false } = {}) {
     body = `
       <div style="font-size:11px;color:var(--text-faint);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;">Analog · ${amin}–${amax}</div>
       <div class="slider-row">
-        <input type="range" id="ctrl-${w.id}" min="${amin}" max="${amax}" value="${amin}">
+        <input type="range" id="ctrl-${w.id}${sx}" min="${amin}" max="${amax}" value="${amin}">
         <div class="slider-readout">
           <span>${amin}</span>
-          <span id="readout-${w.id}">${amin}</span>
+          <span id="readout-${w.id}${sx}">${amin}</span>
           <span>${amax}</span>
         </div>
       </div>
@@ -3388,7 +3673,7 @@ function createWidgetCard(w, { draggable = false } = {}) {
   card.innerHTML = `
     <div class="widget-head">
       <div class="w-icon-box" data-icon="${w.icon || 'activity'}"></div>
-      <div class="w-label">${w.name}</div>
+      <div class="w-label">${nm}</div>
     </div>
     ${body}
     ${draggable ? '<div class="drag-handle" data-icon="grip"></div>' : ''}
@@ -3414,7 +3699,7 @@ function createWidgetCard(w, { draggable = false } = {}) {
   }
 
   if (w.type === 'output') {
-    const ctrl = card.querySelector(`#ctrl-${w.id}`);
+    const ctrl = card.querySelector(`#ctrl-${w.id}${sx}`);
     if (!ctrl) { /* no ctrl */ }
     else if (w.control === 'switch') {
       ctrl.addEventListener('change', () => handleControlChange(w.id, ctrl.checked ? 1 : 0));
@@ -3428,6 +3713,8 @@ function createWidgetCard(w, { draggable = false } = {}) {
           e.preventDefault();
           if (held) return;
           held = true;
+          // tangkap pointer: tanpa ini, lepas jari di luar tombol = robot jalan terus
+          try { b.setPointerCapture(e.pointerId); } catch (_) {}
           padPressDir(code);
         });
         const rel = () => {
@@ -3437,9 +3724,10 @@ function createWidgetCard(w, { draggable = false } = {}) {
         };
         b.addEventListener('pointerup', rel);
         b.addEventListener('pointercancel', rel);
+        b.addEventListener('lostpointercapture', rel);
       });
     } else {
-      const readout = card.querySelector(`#readout-${w.id}`);
+      const readout = card.querySelector(`#readout-${w.id}${sx}`);
       ctrl.addEventListener('input', () => { readout.textContent = ctrl.value; });
       ctrl.addEventListener('change', () => handleControlChange(w.id, ctrl.value));
     }
@@ -3718,7 +4006,7 @@ function renderWidgets() {
   outC += widgets.filter(w => w.type === 'output' && w.control === 'button').length;
 
   widgets.filter(w => !w.isDefault && w.control !== 'button').forEach(w => {
-    customG.appendChild(createWidgetCard(w, { draggable: false }));
+    customG.appendChild(createWidgetCard(w, { draggable: false, mirror: true }));
     custC++;
   });
   renderBitpadExtra();
@@ -3865,12 +4153,8 @@ document.getElementById('addWidgetBtn').addEventListener('click', () => {
 });
 
 document.getElementById('clearDataBtn').addEventListener('click', () => {
-  totalMessages = 0;
-  document.getElementById('statMsgCount').textContent = '0';
-  document.getElementById('logFeed').innerHTML =
-    '<div class="log-empty" id="logEmptyState">Belum ada aktivitas.</div>';
+  clearActivityHistory();   // ikut mengosongkan array riwayat & counter
   renderWidgets();
-  appendLog('Riwayat grafik dan log dibersihkan.', 'system');
   showToast({ title: 'Data dibersihkan', body: 'Log & grafik di-reset.', icon: 'trash', duration: 3000 });
 });
 
@@ -4037,7 +4321,15 @@ function setUIStatus(s) {
   }
 }
 
-async function bleWrite(str) {
+// Antrean tulis: dua kirim bersamaan (pad 120ms + slot parkir) bisa bentrok di GATT
+let bleWriteChain = Promise.resolve();
+function bleWrite(str) {
+  const job = bleWriteChain.then(() => bleWriteNow(str));
+  bleWriteChain = job.catch(() => {});
+  return job;
+}
+
+async function bleWriteNow(str) {
   if (!rxChr) throw new Error('RX characteristic missing');
   const bytes = new TextEncoder().encode(str);
   const chunk = 20;
@@ -4060,10 +4352,37 @@ async function bleWrite(str) {
   }
 }
 
+let bleManualDisconnect = false;
+function onGattDisconnected() {
+  rxChr = null;
+  rxBuffer = '';
+  stopPadStream();
+  if (bleManualDisconnect) { bleManualDisconnect = false; return; }   // sudah ditangani tombol putus
+  setUIStatus('disconnected');
+  appendLog('Koneksi terputus.', 'system');
+  showToast({ title: 'Koneksi terputus', body: 'Micro:bit tidak lagi terhubung.', icon: 'bluetooth', duration: 3500 });
+}
+
+function onBleNotify(e) {
+  rxBuffer += new TextDecoder('utf-8').decode(e.target.value);
+  if (rxBuffer.length > 2048) rxBuffer = rxBuffer.slice(-256);   // jaga-jaga tanpa pemisah baris
+  const delim = bleCfg.delimiter || '\n';
+  let buf = rxBuffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const splitOn = delim === '\r\n' ? '\n' : delim;
+  const lines = buf.split(splitOn);
+  rxBuffer = lines.pop();
+  lines.forEach(l => {
+    l = l.trim();
+    if (l) ingestPacket(l);
+  });
+}
+
 async function toggleBT() {
   if (bleDev && bleDev.gatt.connected) {
+    bleManualDisconnect = true;
     try { bleDev.gatt.disconnect(); } catch (_) {}
     rxChr = null;
+    rxBuffer = '';
     setUIStatus('disconnected');
     showToast({ title: 'Terputus', body: 'Sambungan Bluetooth diakhiri.', icon: 'bluetooth', duration: 3000 });
     return;
@@ -4097,12 +4416,7 @@ async function toggleBT() {
     });
 
     setLoaderText('Menghubungkan…', bleDev.name || 'micro:bit');
-    bleDev.addEventListener('gattserverdisconnected', () => {
-      rxChr = null;
-      setUIStatus('disconnected');
-      appendLog('Koneksi terputus.', 'system');
-      showToast({ title: 'Koneksi terputus', body: 'Micro:bit tidak lagi terhubung.', icon: 'bluetooth', duration: 3500 });
-    });
+    bleDev.addEventListener('gattserverdisconnected', onGattDisconnected);
 
     appendLog(`Menghubungkan ke ${bleDev.name}…`, 'system');
     let server;
@@ -4119,20 +4433,11 @@ async function toggleBT() {
 
     const txChr = await service.getCharacteristic(txUuid);
     await txChr.startNotifications();
-    txChr.addEventListener('characteristicvaluechanged', e => {
-      rxBuffer += new TextDecoder('utf-8').decode(e.target.value);
-      const delim = bleCfg.delimiter || '\n';
-      let buf = rxBuffer.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-      const splitOn = delim === '\r\n' ? '\n' : delim;
-      const lines = buf.split(splitOn);
-      rxBuffer = lines.pop();
-      lines.forEach(l => {
-        l = l.trim();
-        if (l) ingestPacket(l);
-      });
-    });
+    rxBuffer = '';
+    txChr.addEventListener('characteristicvaluechanged', onBleNotify);
 
     rxChr = await service.getCharacteristic(rxUuid);
+    bleManualDisconnect = false;
     setUIStatus('connected');
     appendLog('Sistem siap bertukar data. Format: key,value\\n', 'system');
     hideLoader();
@@ -4195,17 +4500,12 @@ function pushPadLiveEntry(cmd, { viaDemo = false } = {}) {
   const isStop = String(cmd).toLowerCase() === 'stop';
   const row = document.createElement('div');
   row.className = 'pad-live-entry' + (isStop ? ' is-stop' : '');
-  row.innerHTML = `
-    <span class="pad-live-badge">${String(cmd).toUpperCase()}${viaDemo ? ' (demo)' : ''}</span>
-    <span class="pad-live-time">${padLiveTimestamp()}</span>
-  `;
+  row.innerHTML = '<span class="pad-live-badge"></span><span class="pad-live-time"></span>';
+  row.firstChild.textContent = String(cmd).toUpperCase() + (viaDemo ? ' (demo)' : '');
+  row.lastChild.textContent = padLiveTimestamp();
   padLiveList.insertBefore(row, padLiveList.firstChild);
 
-  while (padLiveList.querySelectorAll('.pad-live-entry').length > MAX_PAD_LIVE_ENTRIES) {
-    const last = padLiveList.querySelector('.pad-live-entry:last-child');
-    if (last) last.remove();
-    else break;
-  }
+  while (padLiveList.childElementCount > MAX_PAD_LIVE_ENTRIES) padLiveList.lastElementChild.remove();
 }
 
 /* ===================== LOFI ROBOT PAD ===================== */
@@ -4377,6 +4677,8 @@ function padReleaseDir(code) {
   window.addEventListener('keydown', e => {
     const page = document.getElementById('page-controller');
     if (!page || !page.classList.contains('active')) return;
+    // jangan bajak spasi/Enter saat mengetik di kotak input (mis. kirim manual di log)
+    if (/^(input|textarea|select)$/i.test(e.target.tagName || '')) return;
     const cmd = keyPress[e.key];
     if (!cmd || keyHeld[e.key]) return;
     e.preventDefault();
@@ -4386,8 +4688,6 @@ function padReleaseDir(code) {
     padPressDir(cmd);
   });
   window.addEventListener('keyup', e => {
-    const page = document.getElementById('page-controller');
-    if (!page || !page.classList.contains('active')) return;
     const cmd = keyPress[e.key];
     if (!cmd || !keyHeld[e.key]) return;
     e.preventDefault();
@@ -4397,13 +4697,29 @@ function padReleaseDir(code) {
     padReleaseDir(cmd);
   });
 
+  // Fokus hilang (alt-tab / ganti tab) saat tombol ditahan: lepas semua & kirim stop
+  const releaseAllKeys = () => {
+    let any = false;
+    Object.keys(keyHeld).forEach(k => { if (keyHeld[k]) { any = true; keyHeld[k] = false; } });
+    pad.querySelectorAll('.bitpad-btn.pressed').forEach(b => b.classList.remove('pressed'));
+    if (any || padHeld.size) {
+      padHeld.clear();
+      startPadStream('stop');
+    }
+  };
+  window.addEventListener('blur', releaseAllKeys);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAllKeys(); });
+
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {
       const target = item.getAttribute('data-page');
       if (target !== 'controller') {
+        // pindah halaman saat robot masih jalan: kirim stop dulu, baru hentikan stream
+        const wasMoving = padCurrentCmd && padCurrentCmd !== 'stop';
         padHeld.clear();
         stopPadStream();
         padCurrentCmd = null;
+        if (wasMoving) sendPadCmd('stop');
       }
     });
   });
@@ -4417,9 +4733,13 @@ async function handleControlChange(id, v) {
   if (!w) return;
 
   if (w.control === 'switch') {
-    document.querySelectorAll(`#lbl-${w.id}`).forEach(el => {
+    document.querySelectorAll(`#lbl-${w.id}, #lbl-${w.id}-m`).forEach(el => {
       el.textContent = Number(v) === 1 ? 'Nyala' : 'Mati';
     });
+    document.querySelectorAll(`#ctrl-${w.id}, #ctrl-${w.id}-m`).forEach(el => { el.checked = Number(v) === 1; });
+  } else if (w.control === 'slider') {
+    document.querySelectorAll(`#ctrl-${w.id}, #ctrl-${w.id}-m`).forEach(el => { el.value = v; });
+    document.querySelectorAll(`#readout-${w.id}, #readout-${w.id}-m`).forEach(el => { el.textContent = v; });
   }
 
   const sep = bleCfg.separator || ',';
@@ -4472,7 +4792,7 @@ document.getElementById('logSendBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('logInput').addEventListener('keypress', e => {
+document.getElementById('logInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('logSendBtn').click();
 });
 
@@ -4486,6 +4806,32 @@ let tmRafId = null;
 let tmLastSentClass = null;
 let tmLastSentAt = 0;
 const TM_RESEND_MS = 250; // stream ringan saat kelas sama tetap ≥85%
+
+// TensorFlow.js + Teachable Machine (±1 MB+) baru diunduh saat benar-benar dipakai.
+// Versi dipaku sesuai snippet resmi Teachable Machine (sebelumnya @latest = bisa pecah sewaktu-waktu).
+const TM_LIB_URLS = [
+  'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js',
+  'https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js'
+];
+let tmLibsPromise = null;
+function loadScriptOnce(src) {
+  return new Promise((resolve, reject) => {
+    const el = document.createElement('script');
+    el.src = src;
+    el.onload = resolve;
+    el.onerror = () => reject(new Error('Gagal memuat library. Cek koneksi internet.'));
+    document.head.appendChild(el);
+  });
+}
+function loadTMLibs() {
+  if (typeof tmImage !== 'undefined') return Promise.resolve();
+  if (!tmLibsPromise) {
+    tmLibsPromise = (async () => {
+      for (const src of TM_LIB_URLS) await loadScriptOnce(src);
+    })().catch((e) => { tmLibsPromise = null; throw e; });
+  }
+  return tmLibsPromise;
+}
 
 function tmNormalizeModelUrl(raw) {
   let u = String(raw || '').trim();
@@ -4613,29 +4959,35 @@ async function tmPredict() {
   }
 }
 
+const TM_PREDICT_MS = 100;   // ±10 prediksi/detik cukup; sebelumnya tiap frame (60x/detik)
+let tmLastPredAt = 0;
 async function tmLoop() {
   if (!tmRunning) return;
   if (tmWebcam) tmWebcam.update();
-  try { await tmPredict(); } catch (e) { console.warn('tmPredict', e); }
-  tmRafId = window.requestAnimationFrame(tmLoop);
+  const now = performance.now();
+  if (now - tmLastPredAt >= TM_PREDICT_MS) {
+    tmLastPredAt = now;
+    try { await tmPredict(); } catch (e) { console.warn('tmPredict', e); }
+  }
+  if (tmRunning) tmRafId = window.requestAnimationFrame(tmLoop);
 }
 
+let tmStarting = false;
 async function tmStart() {
+  if (tmRunning || tmStarting) return;   // Enter di input + klik tombol = dua loop sekaligus
   const raw = document.getElementById('tmModelUrl')?.value || '';
   const base = tmNormalizeModelUrl(raw);
   if (!base) {
     tmSetStatus('Masukkan URL model Teachable Machine yang valid.', 'err');
     return;
   }
-  if (typeof tmImage === 'undefined') {
-    tmSetStatus('Library Teachable Machine belum termuat. Cek koneksi internet.', 'err');
-    return;
-  }
 
+  tmStarting = true;
   document.getElementById('tmStartBtn').disabled = true;
-  tmSetStatus('Memuat model…', null);
+  tmSetStatus('Memuat library & model…', null);
 
   try {
+    await loadTMLibs();
     const modelURL = base + 'model.json';
     const metadataURL = base + 'metadata.json';
     tmModel = await tmImage.load(modelURL, metadataURL);
@@ -4673,6 +5025,8 @@ async function tmStart() {
     document.getElementById('tmStartBtn').disabled = false;
     tmSetStatus('Gagal memuat model/kamera: ' + (err?.message || 'error'), 'err');
     appendLog('TM error: ' + (err?.message || 'gagal'), 'error');
+  } finally {
+    tmStarting = false;
   }
 }
 
@@ -4759,6 +5113,556 @@ document.getElementById('tmModelUrl')?.addEventListener('keydown', e => {
       if (typeof hideLoader === 'function') hideLoader();
     }
   }, 4000);
+})();
+
+/* =========================================================
+   SMART PARKING
+   - Sensor (pin IOBIT) → micro:bit → app kirim "pin,1" / "pin,0"
+   - Slot terisi  → kirim "lampu,N" (N = kode slot) ke micro:bit
+   - Slot kosong  → tidak ada data dikirim
+   ========================================================= */
+(function initSmartParking() {
+  const root = document.getElementById('page-parking');
+  if (!root) return;
+  const $ = (id) => document.getElementById(id);
+  const MAX_SLOTS = 10;
+  const PIN_ORDER = ['P0','P1','P2','P8','P12','P13','P14','P15','P16','P3','P4','P5','P6','P7','P9','P10','P11','P19','P20'];
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const hhmmss = (d) => d.toLocaleTimeString('id-ID', { hour12: false });
+  let uid = 0;
+  const newId = () => 's' + Date.now().toString(36) + (uid++);
+
+  const CAR_SVG = `<svg class="pk-car" viewBox="0 0 80 140" aria-hidden="true">
+    <rect x="1" y="26" width="9" height="24" rx="3" fill="#161618"/><rect x="70" y="26" width="9" height="24" rx="3" fill="#161618"/>
+    <rect x="1" y="92" width="9" height="24" rx="3" fill="#161618"/><rect x="70" y="92" width="9" height="24" rx="3" fill="#161618"/>
+    <rect x="8" y="3" width="64" height="134" rx="24" fill="currentColor"/>
+    <rect x="16" y="30" width="48" height="26" rx="9" fill="rgba(0,0,0,.5)"/>
+    <rect x="18" y="60" width="44" height="32" rx="7" fill="rgba(0,0,0,.22)"/>
+    <rect x="16" y="96" width="48" height="18" rx="8" fill="rgba(0,0,0,.5)"/>
+    <ellipse cx="21" cy="12" rx="6" ry="3.5" fill="#FFF3C4"/><ellipse cx="59" cy="12" rx="6" ry="3.5" fill="#FFF3C4"/>
+    <rect x="15" y="127" width="12" height="4" rx="2" fill="#FFB3AD"/><rect x="53" y="127" width="12" height="4" rx="2" fill="#FFB3AD"/>
+  </svg>`;
+
+  /* ---------- state ---------- */
+  const defaults = () => ({
+    key: 'lampu', sepMode: 'app', activeLow: false, autoOpen: true,
+    mode: 'motion', sens: 70, tmUrl: '', tmClass: 'mobil',
+    slots: [['P0', 1], ['P1', 2], ['P2', 3], ['P8', 4]].map(([pin, code]) => ({ id: newId(), pin, code }))
+  });
+  let cfg = (() => {
+    const s = (typeof loadState === 'function' ? loadState().parking : null);
+    const d = defaults();
+    if (!s || !Array.isArray(s.slots) || !s.slots.length) return d;
+    const merged = { ...d, ...s };
+    merged.slots = s.slots.slice(0, MAX_SLOTS).map((x) => ({
+      id: x.id || newId(), pin: String(x.pin || 'P0'), code: Math.min(99, Math.max(1, parseInt(x.code, 10) || 1))
+    }));
+    return merged;
+  })();
+  const persist = () => { try { saveState({ parking: cfg }); } catch (_) {} };
+  const occ = {}; // id → { busy, since }
+  const occOf = (id) => occ[id] || (occ[id] = { busy: false, since: Date.now() });
+
+  const keyName = () => (cfg.key || 'lampu').trim() || 'lampu';
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const pretty = (code) => `${cap(keyName())} ${code}`;
+  const sepChar = () => (cfg.sepMode === 'app' ? ((typeof bleCfg !== 'undefined' && bleCfg.separator) || ',') : cfg.sepMode);
+  const slotNo = (s) => cfg.slots.indexOf(s) + 1;
+  const freeCount = () => cfg.slots.filter((s) => !occOf(s.id).busy).length;
+  const toast = (title, body, icon = 'car') => { if (typeof showToast === 'function') showToast({ title, body, icon, duration: 3200 }); };
+
+  /* ---------- feed & status ---------- */
+  function feed(type, text, raw) {
+    const list = $('pkFeed');
+    const empty = $('pkFeedEmpty');
+    if (empty) empty.remove();
+    const row = document.createElement('div');
+    row.className = 'pk-feed-row t-' + type;
+    row.innerHTML = '<span class="pk-dot"></span><span class="pk-feed-text"></span><span class="pk-feed-time"></span>';
+    row.children[1].textContent = text;
+    if (raw) row.title = 'Paket: ' + raw;
+    row.children[2].textContent = hhmmss(new Date());
+    list.insertBefore(row, list.firstChild);
+    while (list.children.length > 40) list.lastChild.remove();
+  }
+  function setNow(text, tone) {
+    $('pkNow').textContent = text;
+    $('pkNowBox').dataset.tone = tone || 'idle';
+  }
+  function setLastSent(text) { $('pkLastSent').textContent = text; }
+
+  /* ---------- kirim data (hanya saat slot terisi) ---------- */
+  async function sendPacket(raw, label) {
+    const suffix = (typeof bleCfg !== 'undefined' && bleCfg.sendSuffix === '') ? '' : ((typeof bleCfg !== 'undefined' && bleCfg.sendSuffix) || '\n');
+    if (typeof rxChr === 'undefined' || !rxChr) {
+      if (typeof appendLog === 'function') appendLog(label + ' (simulasi)', 'pad');
+      setLastSent(label + ' · simulasi');
+      feed('send', `${label} · simulasi, belum terhubung`, raw);
+      return;
+    }
+    try {
+      await bleWrite(raw + suffix);
+      if (typeof appendLog === 'function') appendLog(label, 'out');
+      setLastSent(label);
+      feed('send', `${label} terkirim`, raw);
+    } catch (e) {
+      if (typeof appendLog === 'function') appendLog('Gagal kirim ' + label + ': ' + ((e && e.message) || 'error'), 'error');
+      feed('err', `${label} gagal terkirim`, raw);
+    }
+  }
+  const sendSlot = (s) => sendPacket(`${keyName()}${sepChar()}${s.code}`, pretty(s.code));
+
+  /* ---------- slot ---------- */
+  function updateStats() {
+    const total = cfg.slots.length;
+    const busy = cfg.slots.filter((s) => occOf(s.id).busy).length;
+    $('pkStatTotal').textContent = total;
+    $('pkStatBusy').textContent = busy;
+    $('pkStatFree').textContent = total - busy;
+    $('pkAddSlot').disabled = total >= MAX_SLOTS;
+  }
+  function sinceText(st) { return (st.busy ? 'Terisi' : 'Kosong') + ' sejak ' + hhmmss(new Date(st.since)); }
+
+  function paintSlot(el, s) {
+    const st = occOf(s.id);
+    el.classList.toggle('is-busy', st.busy);
+    el.setAttribute('aria-label', `Slot ${slotNo(s)}, ${st.busy ? 'terisi' : 'kosong'}`);
+    el.querySelector('.pk-since').textContent = sinceText(st);
+  }
+  function renderSlots() {
+    const box = $('pkSlots');
+    box.innerHTML = '';
+    const canDel = cfg.slots.length > 1;
+    cfg.slots.forEach((s, i) => {
+      const el = document.createElement('div');
+      el.className = 'pk-slot';
+      el.dataset.id = s.id;
+      el.setAttribute('role', 'status');
+      el.innerHTML = `
+        <button type="button" class="pk-slot-x" data-del="${s.id}" title="Hapus Slot ${i + 1}" ${canDel ? '' : 'disabled'}>✕</button>
+        <div class="pk-slot-top"><span class="pk-slot-name">Slot ${i + 1}</span><span class="pk-slot-pin">${esc(s.pin)}</span></div>
+        <div class="pk-bay"><span class="pk-free-txt">Kosong</span>${CAR_SVG}</div>
+        <div class="pk-slot-bot"><span class="pk-lamp">${esc(pretty(s.code))}</span><span class="pk-since"></span></div>`;
+      paintSlot(el, s);
+      box.appendChild(el);
+    });
+    updateStats();
+    const cap = $('pkSlotCap');
+    if (cap) {
+      cap.textContent = cfg.slots.length + ' / ' + MAX_SLOTS + ' slot';
+      cap.dataset.tone = cfg.slots.length >= MAX_SLOTS ? 'busy' : 'idle';
+    }
+    // isi default form tambah
+    const usedPins = new Set(cfg.slots.map((x) => x.pin.toUpperCase()));
+    const usedCodes = new Set(cfg.slots.map((x) => x.code));
+    const nextPin = PIN_ORDER.find((p) => !usedPins.has(p)) || ('P' + cfg.slots.length);
+    let nextCode = 1; while (usedCodes.has(nextCode) && nextCode < 99) nextCode++;
+    const np = $('pkNewPin'); const nc = $('pkNewCode');
+    if (np && !np.matches(':focus')) np.value = nextPin;
+    if (nc && !nc.matches(':focus')) nc.value = String(nextCode);
+  }
+  function repaintSlot(id) {
+    const s = cfg.slots.find((x) => x.id === id);
+    const el = $('pkSlots').querySelector(`[data-id="${id}"]`);
+    if (s && el) paintSlot(el, s);
+  }
+
+  async function setOccupied(id, busy) {
+    const s = cfg.slots.find((x) => x.id === id);
+    if (!s) return;
+    const st = occOf(id);
+    if (st.busy === busy) return;
+    st.busy = busy;
+    st.since = Date.now();
+    repaintSlot(id);
+    updateStats();
+    const n = slotNo(s);
+    if (busy) {
+      feed('in', `Mobil masuk · Slot ${n}`);
+      setNow(`Mobil parkir di Slot ${n}`, 'busy');
+      if (gate.open) closeGate(`Mobil sudah masuk ke Slot ${n}`);
+      await sendSlot(s);
+    } else {
+      feed('out', `Mobil keluar · Slot ${n} · tidak ada data dikirim`);
+      setNow(`Slot ${n} kosong lagi`, 'free');
+    }
+  }
+
+  /* ---------- input sensor dari micro:bit ---------- */
+  const debounce = {};
+  function sensorInput(id, busy) {
+    clearTimeout(debounce[id]);
+    if (occOf(id).busy === busy) return;
+    debounce[id] = setTimeout(() => setOccupied(id, busy), 350);
+  }
+  const PKT = /^\s*([a-z0-9_]+)\s*[,\/:=]\s*(-?\d+(?:\.\d+)?)\s*$/i;
+  function handlePacket(line) {
+    const m = PKT.exec(line);
+    if (!m) return;
+    const pin = m[1].toLowerCase();
+    const v = parseFloat(m[2]);
+    const s = cfg.slots.find((x) => x.pin.toLowerCase() === pin);
+    if (!s) return;
+    sensorInput(s.id, cfg.activeLow ? v === 0 : v > 0);
+  }
+  if (typeof ingestPacket === 'function') {
+    const baseIngest = ingestPacket;
+    ingestPacket = function (line) {
+      baseIngest(line);
+      try { handlePacket(String(line)); } catch (e) { console.warn(e); }
+    };
+  }
+
+  /* ---------- gerbang ---------- */
+  const gate = { open: false, timer: null, waiting: false, waitSince: 0, present: false };
+  function setGate(text, chip, tone) {
+    $('pkGateStatus').textContent = text;
+    const c = $('pkGateChip');
+    c.textContent = chip;
+    c.dataset.tone = tone;
+  }
+  const sendGate = (open) => sendPacket(`gerbang${sepChar()}${open ? 1 : 0}`, open ? 'Gerbang buka' : 'Gerbang tutup');
+  function openGate(by) {
+    if (gate.open) return;
+    if (freeCount() === 0) {
+      setGate('Parkir penuh. Gerbang tetap tertutup.', 'Penuh', 'busy');
+      setNow('Parkir penuh', 'busy');
+      feed('gate', 'Parkir penuh · gerbang tidak dibuka');
+      return;
+    }
+    gate.open = true;
+    gate.waiting = false;
+    $('pkBarrier').classList.add('open');
+    setGate('Gerbang terbuka. Silakan masuk ke slot kosong.', 'Terbuka', 'free');
+    setNow('Gerbang terbuka, mobil boleh masuk', 'free');
+    feed('gate', by === 'manual' ? 'Gerbang dibuka manual' : 'Gerbang dibuka otomatis');
+    sendGate(true);
+    clearTimeout(gate.timer);
+    gate.timer = setTimeout(() => closeGate('Waktu masuk habis'), 20000);
+  }
+  function closeGate(why) {
+    clearTimeout(gate.timer);
+    if (!gate.open) return;
+    gate.open = false;
+    $('pkBarrier').classList.remove('open');
+    setGate(why ? `Gerbang tertutup. ${why}.` : 'Gerbang tertutup.', 'Tertutup', 'idle');
+    feed('gate', 'Gerbang ditutup' + (why ? ` · ${why}` : ''));
+    sendGate(false);
+  }
+  function onPresence(p) {
+    if (p === gate.present) return;
+    gate.present = p;
+    if (p) {
+      if (gate.open) return;
+      gate.waiting = true;
+      gate.waitSince = Date.now();
+      if (!waitTicker) waitTicker = setInterval(tickWait, 1000);
+      feed('wait', 'Mobil menunggu di depan gerbang');
+      setNow('Mobil menunggu di gerbang', 'wait');
+      if (freeCount() === 0) {
+        setGate('Mobil menunggu. Parkir penuh.', 'Penuh', 'busy');
+        feed('gate', 'Parkir penuh · gerbang tidak dibuka');
+        return;
+      }
+      setGate('Mobil terdeteksi di depan gerbang.', 'Menunggu', 'wait');
+      if (cfg.autoOpen) openGate('auto');
+    } else if (gate.waiting) {
+      gate.waiting = false;
+      feed('wait', 'Mobil pergi dari gerbang');
+      if (!gate.open) {
+        setGate('Gerbang tertutup. Menunggu kendaraan.', 'Tertutup', 'idle');
+        setNow('Menunggu kendaraan', 'idle');
+      }
+    }
+  }
+  let waitTicker = null;   // hanya hidup selama ada mobil menunggu
+  function tickWait() {
+    if (gate.waiting && !gate.open) {
+      setNow(`Mobil menunggu di gerbang · ${Math.round((Date.now() - gate.waitSince) / 1000)} dtk`, 'wait');
+    } else {
+      clearInterval(waitTicker);
+      waitTicker = null;
+    }
+  }
+
+  /* ---------- kamera & deteksi ---------- */
+  const video = $('pkVideo');
+  const mc = document.createElement('canvas');
+  mc.width = 64; mc.height = 48;
+  const mctx = mc.getContext('2d', { willReadFrequently: true });
+  let stream = null, loopTimer = null, baseline = null, tmModel = null, tmBusy = false, pos = 0, neg = 0, baseTimer = null;
+
+  function grab() {
+    mctx.drawImage(video, 0, 0, 64, 48);
+    const d = mctx.getImageData(0, 0, 64, 48).data;
+    const g = new Uint8Array(64 * 48);
+    for (let i = 0; i < g.length; i++) g[i] = (d[i * 4] * 77 + d[i * 4 + 1] * 150 + d[i * 4 + 2] * 29) >> 8;
+    return g;
+  }
+  const badge = (t) => { $('pkCamBadge').textContent = t; };
+  const threshold = () => 0.30 - (+cfg.sens || 50) * 0.0025;
+
+  async function detectTick() {
+    if (!stream || video.readyState < 2) return;
+    let present;
+    if (cfg.mode === 'tm') {
+      if (!tmModel || tmBusy) return;
+      tmBusy = true;
+      try {
+        const preds = await tmModel.predict(video);
+        const want = (cfg.tmClass || 'mobil').trim().toLowerCase();
+        const hit = preds.find((p) => p.className.toLowerCase() === want);
+        const prob = hit ? hit.probability : 0;
+        present = prob >= 0.85;
+        badge(`${want} ${Math.round(prob * 100)}%`);
+      } catch (e) { console.warn(e); } finally { tmBusy = false; }
+      if (present === undefined) return;
+    } else {
+      const cur = grab();
+      if (!baseline) { baseline = cur; return; }
+      let n = 0;
+      for (let i = 0; i < cur.length; i++) if (Math.abs(cur[i] - baseline[i]) > 30) n++;
+      const area = n / cur.length;
+      present = area >= threshold();
+      badge(`Area berubah ${Math.round(area * 100)}%`);
+    }
+    if (present) { pos++; neg = 0; } else { neg++; pos = 0; }
+    if (pos >= 2) onPresence(true);
+    else if (neg >= 4) onPresence(false);
+  }
+
+  function camButtons(on) {
+    $('pkCamStart').disabled = on;
+    $('pkCamStop').disabled = !on;
+    $('pkCalib').disabled = !on || cfg.mode === 'tm';
+  }
+  async function camStart() {
+    if (stream) return;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast('Kamera tidak tersedia', 'Buka lewat HTTPS atau localhost, dan pakai browser yang mendukung kamera.', 'camera');
+      feed('err', 'Kamera tidak tersedia di browser ini');
+      return;
+    }
+    $('pkCamStart').disabled = true;
+    try {
+      if (cfg.mode === 'tm') {
+        const base = (typeof tmNormalizeModelUrl === 'function') ? tmNormalizeModelUrl(cfg.tmUrl) : '';
+        if (!base) { toast('URL model kosong', 'Isi URL model Teachable Machine dulu.', 'camera'); $('pkCamStart').disabled = false; return; }
+        $('pkGateStatus').textContent = 'Memuat library & model…';
+        await loadTMLibs();
+        tmModel = await tmImage.load(base + 'model.json', base + 'metadata.json');
+      }
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
+      video.srcObject = stream;
+      await video.play();
+      $('pkCam').classList.add('on');
+      baseline = null; pos = 0; neg = 0;
+      clearTimeout(baseTimer);
+      if (cfg.mode === 'motion') baseTimer = setTimeout(() => { if (stream) { baseline = grab(); } }, 1200);
+      clearInterval(loopTimer);
+      loopTimer = setInterval(detectTick, 120);
+      camButtons(true);
+      if (!gate.open) { setGate('Kamera aktif. Menunggu kendaraan.', 'Tertutup', 'idle'); setNow('Kamera gerbang aktif', 'idle'); }
+      feed('gate', 'Kamera gerbang aktif');
+    } catch (e) {
+      console.warn(e);
+      stream = null;
+      camButtons(false);
+      if (!gate.open) setGate('Kamera gagal dibuka.', 'Tertutup', 'idle');
+      feed('err', 'Kamera gagal: ' + ((e && e.message) || 'izin ditolak'));
+      toast('Kamera gagal', (e && e.message) || 'Izin kamera ditolak.', 'camera');
+    }
+  }
+  function camStop() {
+    clearInterval(loopTimer); loopTimer = null;
+    clearTimeout(baseTimer);
+    if (stream) { stream.getTracks().forEach((t) => t.stop()); stream = null; }
+    video.srcObject = null;
+    $('pkCam').classList.remove('on');
+    gate.present = false; gate.waiting = false;
+    camButtons(false);
+    if (!gate.open) { setGate('Kamera dimatikan. Gerbang tertutup.', 'Tertutup', 'idle'); setNow('Menunggu kendaraan', 'idle'); }
+    feed('gate', 'Kamera gerbang dimatikan');
+  }
+
+  /* ---------- konfigurasi: baris slot ---------- */
+  function renderRows() {
+    $('pkRows').innerHTML = cfg.slots.map((s, i) => `
+      <div class="pk-row" data-id="${s.id}">
+        <span class="pk-row-name">Slot ${i + 1}</span>
+        <input class="pk-in-pin" list="pkPins" value="${esc(s.pin)}" maxlength="8" spellcheck="false" autocomplete="off" aria-label="Pin slot ${i + 1}">
+        <input class="pk-in-code" type="number" min="1" max="99" value="${s.code}" aria-label="Kode kirim slot ${i + 1}">
+        <button type="button" class="pk-del" aria-label="Hapus slot ${i + 1}" title="Hapus slot ${i + 1}" ${cfg.slots.length <= 1 ? 'disabled' : ''}>✕</button>
+      </div>`).join('');
+  }
+  function refreshPreview() {
+    const first = cfg.slots[0] ? cfg.slots[0].code : 1;
+    $('pkPreview').textContent = `${keyName()}${sepChar()}${first}\\n`;
+  }
+  function makecode() {
+    const sep = sepChar();
+    const key = keyName();
+    const list = cfg.slots.filter((s) => /^P\d+$/i.test(s.pin));
+    let c = '// Smart Parking: kirim status sensor tiap pin ke aplikasi\n';
+    c += 'bluetooth.startUartService()\n';
+    list.forEach((s, i) => { c += `let s${i} = -1\n`; });
+    c += '\n// kirim ulang semua status begitu aplikasi tersambung\n';
+    c += 'bluetooth.onBluetoothConnected(function () {\n';
+    list.forEach((s, i) => { c += `    s${i} = -1\n`; });
+    c += '})\n\n';
+    c += 'basic.forever(function () {\n';
+    list.forEach((s, i) => {
+      c += `    let v${i} = pins.digitalReadPin(DigitalPin.${s.pin.toUpperCase()})\n`;
+      c += `    if (v${i} != s${i}) {\n        s${i} = v${i}\n        bluetooth.uartWriteLine("${s.pin.toLowerCase()}${sep}" + v${i})\n    }\n`;
+    });
+    c += '    basic.pause(100)\n})\n\n';
+    c += `// Terima "${key}${sep}N" dari aplikasi, tampilkan nomor di LED\n`;
+    c += 'bluetooth.onUartDataReceived(serial.delimiters(Delimiters.NewLine), function () {\n';
+    c += '    let parts = bluetooth.uartReadUntil(serial.delimiters(Delimiters.NewLine)).split("' + sep + '")\n';
+    c += `    if (parts.length >= 2 && parts[0] == "${key}") {\n        basic.showNumber(parseInt(parts[1]))\n    }\n`;
+    c += '    if (parts.length >= 2 && parts[0] == "gerbang") {\n        // 1 = buka, 0 = tutup. Pasang servo/relay gerbang di sini\n        basic.showIcon(parseInt(parts[1]) == 1 ? IconNames.Yes : IconNames.No)\n    }\n})\n';
+    return c;
+  }
+  const refreshCode = () => { $('pkMakecode').textContent = makecode(); };
+  const refreshAll = () => { refreshPreview(); refreshCode(); };
+
+  /* ---------- event ---------- */
+  function deleteSlotById(id) {
+    if (cfg.slots.length <= 1) {
+      toast('Minimal 1 slot', 'Parkir harus punya setidaknya satu slot.');
+      return;
+    }
+    const idx = cfg.slots.findIndex((x) => x.id === id);
+    if (idx < 0) return;
+    const [rm] = cfg.slots.splice(idx, 1);
+    delete occ[rm.id];
+    persist(); renderSlots(); renderRows(); refreshAll();
+    feed('gate', `Slot dihapus · pin ${rm.pin}`);
+    toast('Slot dihapus', `Pin ${rm.pin} tidak dipakai lagi.`, 'car');
+  }
+
+  $('pkAddSlot').addEventListener('click', () => {
+    if (cfg.slots.length >= MAX_SLOTS) {
+      toast('Maksimal ' + MAX_SLOTS + ' slot', 'Hapus slot lain dulu kalau mau nambah.');
+      return;
+    }
+    let pin = (($('pkNewPin') && $('pkNewPin').value) || '').trim().replace(/\s+/g, '');
+    if (/^p\d+$/i.test(pin)) pin = pin.toUpperCase();
+    if (!pin) {
+      const usedPins = new Set(cfg.slots.map((s) => s.pin.toUpperCase()));
+      pin = PIN_ORDER.find((p) => !usedPins.has(p)) || ('P' + cfg.slots.length);
+    }
+    if (cfg.slots.some((s) => s.pin.toLowerCase() === pin.toLowerCase())) {
+      toast('Pin sudah dipakai', pin + ' sudah ada di slot lain.');
+      return;
+    }
+    let code = parseInt($('pkNewCode') && $('pkNewCode').value, 10);
+    if (isNaN(code) || code < 1) code = 1;
+    code = Math.min(99, code);
+    if (cfg.slots.some((s) => s.code === code)) {
+      toast('Kode sudah dipakai', pretty(code) + ' sudah dipakai slot lain.');
+      return;
+    }
+    cfg.slots.push({ id: newId(), pin, code });
+    persist(); renderSlots(); renderRows(); refreshAll();
+    feed('gate', `Slot ${cfg.slots.length} ditambah · pin ${pin} · ${pretty(code)}`);
+    toast('Slot ditambah', `Slot ${cfg.slots.length} · pin ${pin} · ${pretty(code)}`, 'car');
+  });
+
+  $('pkSlots').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-del]');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    deleteSlotById(btn.getAttribute('data-del'));
+  });
+
+  $('pkRows').addEventListener('change', (e) => {
+    const row = e.target.closest('.pk-row');
+    if (!row) return;
+    const s = cfg.slots.find((x) => x.id === row.dataset.id);
+    if (!s) return;
+    if (e.target.classList.contains('pk-in-pin')) {
+      let v = e.target.value.trim().replace(/\s+/g, '');
+      if (/^p\d+$/i.test(v)) v = v.toUpperCase();
+      const dup = cfg.slots.find((x) => x !== s && x.pin.toLowerCase() === v.toLowerCase());
+      if (!v || dup) {
+        if (dup) toast('Pin sudah dipakai', `${v} dipakai Slot ${slotNo(dup)}.`);
+        e.target.value = s.pin;
+        return;
+      }
+      s.pin = v; e.target.value = v;
+    } else if (e.target.classList.contains('pk-in-code')) {
+      const n = parseInt(e.target.value, 10);
+      if (isNaN(n)) { e.target.value = s.code; return; }
+      s.code = Math.min(99, Math.max(1, n));
+      e.target.value = s.code;
+    }
+    persist(); renderSlots(); refreshAll();
+  });
+  $('pkRows').addEventListener('click', (e) => {
+    const btn = e.target.closest('.pk-del');
+    if (!btn || btn.disabled) return;
+    const row = btn.closest('.pk-row');
+    if (row) deleteSlotById(row.dataset.id);
+  });
+
+  $('pkKey').addEventListener('change', (e) => {
+    const v = e.target.value.trim().replace(/[\s,\/:]/g, '');
+    cfg.key = v || 'lampu';
+    e.target.value = cfg.key;
+    persist(); renderSlots(); refreshAll();
+  });
+  $('pkSep').addEventListener('change', (e) => { cfg.sepMode = e.target.value; persist(); refreshAll(); });
+  $('pkActiveLow').addEventListener('change', (e) => { cfg.activeLow = e.target.checked; persist(); });
+  $('pkAutoOpen').addEventListener('change', (e) => { cfg.autoOpen = e.target.checked; persist(); });
+  $('pkSens').addEventListener('input', (e) => { cfg.sens = +e.target.value; persist(); });
+  $('pkTmUrl').addEventListener('change', (e) => { cfg.tmUrl = e.target.value.trim(); persist(); });
+  $('pkTmClass').addEventListener('change', (e) => { cfg.tmClass = e.target.value.trim() || 'mobil'; persist(); });
+  $('pkMode').addEventListener('change', (e) => {
+    cfg.mode = e.target.value; persist();
+    applyModeUI();
+    if (stream) camStop();
+  });
+  function applyModeUI() {
+    const tm = cfg.mode === 'tm';
+    $('pkTmFields').hidden = !tm;
+    $('pkTmClassField').hidden = !tm;
+    $('pkSensField').hidden = tm;
+    $('pkCalib').disabled = !stream || tm;
+  }
+
+  $('pkCamStart').addEventListener('click', camStart);
+  $('pkCamStop').addEventListener('click', camStop);
+  $('pkCalib').addEventListener('click', () => {
+    if (!stream || cfg.mode !== 'motion') return;
+    baseline = grab(); pos = 0; neg = 0;
+    feed('gate', 'Gerbang kosong dikalibrasi ulang');
+    toast('Kalibrasi selesai', 'Kondisi sekarang dipakai sebagai gerbang kosong.', 'camera');
+  });
+  $('pkOpenGate').addEventListener('click', () => openGate('manual'));
+  $('pkCloseGate').addEventListener('click', () => closeGate('Ditutup manual'));
+
+  $('pkCopyCode').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(makecode()); toast('Kode disalin', 'Tempel di MakeCode (mode JavaScript).', 'activity'); }
+    catch { toast('Gagal salin', 'Clipboard diblokir browser.', 'activity'); }
+  });
+
+  /* ---------- init ---------- */
+  $('pkKey').value = cfg.key;
+  $('pkSep').value = cfg.sepMode;
+  $('pkActiveLow').checked = !!cfg.activeLow;
+  $('pkAutoOpen').checked = !!cfg.autoOpen;
+  $('pkSens').value = cfg.sens;
+  $('pkMode').value = cfg.mode;
+  $('pkTmUrl').value = cfg.tmUrl || '';
+  $('pkTmClass').value = cfg.tmClass || 'mobil';
+  applyModeUI();
+  renderSlots();
+  renderRows();
+  refreshAll();
+  camButtons(false);
+  window.addEventListener('beforeunload', () => { if (stream) stream.getTracks().forEach((t) => t.stop()); });
 })();
 </script>
 </body>

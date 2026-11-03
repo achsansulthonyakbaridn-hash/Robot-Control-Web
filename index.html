@@ -2077,6 +2077,12 @@ body.is-dragging * { cursor: grabbing !important; }
 .pk-slot.is-busy .pk-car { transform: translate(-50%, -50%); opacity: 1; }
 .pk-slot-bot { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 10px; font-size: 11.5px; color: var(--text-muted); }
 .pk-slot-bot .pk-lamp { font-weight: 600; color: var(--text); }
+.pk-empty {
+  grid-column: 1 / -1; padding: 34px 18px; text-align: center; line-height: 1.6;
+  color: var(--text-muted); font-size: 13.5px;
+  border: 1.5px dashed var(--border-strong); border-radius: var(--radius);
+}
+.pk-empty b { color: var(--text); font-weight: 600; }
 
 /* ---- gate / camera ---- */
 .pk-chip { font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 99px; background: var(--surface-3); color: var(--text-muted); white-space: nowrap; }
@@ -5147,19 +5153,19 @@ document.getElementById('tmModelUrl')?.addEventListener('keydown', e => {
   const defaults = () => ({
     key: 'lampu', sepMode: 'app', activeLow: false, autoOpen: true,
     mode: 'motion', sens: 70, tmUrl: '', tmClass: 'mobil',
-    slots: [['P0', 1], ['P1', 2], ['P2', 3], ['P8', 4]].map(([pin, code]) => ({ id: newId(), pin, code }))
+    slots: []   // kosong: slot ditambah sendiri lewat form "Tambah slot"
   });
   let cfg = (() => {
-    const s = (typeof loadState === 'function' ? loadState().parking : null);
+    const s = (typeof loadState === 'function' ? loadState().parking_v2 : null);
     const d = defaults();
-    if (!s || !Array.isArray(s.slots) || !s.slots.length) return d;
+    if (!s || !Array.isArray(s.slots)) return d;
     const merged = { ...d, ...s };
     merged.slots = s.slots.slice(0, MAX_SLOTS).map((x) => ({
       id: x.id || newId(), pin: String(x.pin || 'P0'), code: Math.min(99, Math.max(1, parseInt(x.code, 10) || 1))
     }));
     return merged;
   })();
-  const persist = () => { try { saveState({ parking: cfg }); } catch (_) {} };
+  const persist = () => { try { saveState({ parking_v2: cfg }); } catch (_) {} };
   const occ = {}; // id → { busy, since }
   const occOf = (id) => occ[id] || (occ[id] = { busy: false, since: Date.now() });
 
@@ -5232,14 +5238,16 @@ document.getElementById('tmModelUrl')?.addEventListener('keydown', e => {
   function renderSlots() {
     const box = $('pkSlots');
     box.innerHTML = '';
-    const canDel = cfg.slots.length > 1;
+    if (!cfg.slots.length) {
+      box.innerHTML = '<div class="pk-empty">Belum ada slot parkir.<br>Isi pin IOBit dan kode kirim di atas, lalu tekan <b>Tambah slot</b>.</div>';
+    }
     cfg.slots.forEach((s, i) => {
       const el = document.createElement('div');
       el.className = 'pk-slot';
       el.dataset.id = s.id;
       el.setAttribute('role', 'status');
       el.innerHTML = `
-        <button type="button" class="pk-slot-x" data-del="${s.id}" title="Hapus Slot ${i + 1}" ${canDel ? '' : 'disabled'}>✕</button>
+        <button type="button" class="pk-slot-x" data-del="${s.id}" title="Hapus Slot ${i + 1}">✕</button>
         <div class="pk-slot-top"><span class="pk-slot-name">Slot ${i + 1}</span><span class="pk-slot-pin">${esc(s.pin)}</span></div>
         <div class="pk-bay"><span class="pk-free-txt">Kosong</span>${CAR_SVG}</div>
         <div class="pk-slot-bot"><span class="pk-lamp">${esc(pretty(s.code))}</span><span class="pk-since"></span></div>`;
@@ -5324,6 +5332,12 @@ document.getElementById('tmModelUrl')?.addEventListener('keydown', e => {
   const sendGate = (open) => sendPacket(`gerbang${sepChar()}${open ? 1 : 0}`, open ? 'Gerbang buka' : 'Gerbang tutup');
   function openGate(by) {
     if (gate.open) return;
+    if (!cfg.slots.length) {
+      setGate('Belum ada slot parkir. Tambah slot dulu.', 'Tertutup', 'idle');
+      setNow('Belum ada slot parkir', 'idle');
+      feed('gate', 'Gerbang tidak dibuka · belum ada slot');
+      return;
+    }
     if (freeCount() === 0) {
       setGate('Parkir penuh. Gerbang tetap tertutup.', 'Penuh', 'busy');
       setNow('Parkir penuh', 'busy');
@@ -5359,6 +5373,11 @@ document.getElementById('tmModelUrl')?.addEventListener('keydown', e => {
       if (!waitTicker) waitTicker = setInterval(tickWait, 1000);
       feed('wait', 'Mobil menunggu di depan gerbang');
       setNow('Mobil menunggu di gerbang', 'wait');
+      if (!cfg.slots.length) {
+        setGate('Mobil menunggu. Belum ada slot parkir.', 'Menunggu', 'wait');
+        feed('gate', 'Gerbang tidak dibuka · belum ada slot');
+        return;
+      }
       if (freeCount() === 0) {
         setGate('Mobil menunggu. Parkir penuh.', 'Penuh', 'busy');
         feed('gate', 'Parkir penuh · gerbang tidak dibuka');
@@ -5487,12 +5506,15 @@ document.getElementById('tmModelUrl')?.addEventListener('keydown', e => {
 
   /* ---------- konfigurasi: baris slot ---------- */
   function renderRows() {
+    const head = document.querySelector('.pk-row-head');
+    if (head) head.style.display = cfg.slots.length ? '' : 'none';
+    if (!cfg.slots.length) { $('pkRows').innerHTML = '<p class="pk-hint" style="margin:0;">Belum ada slot. Tambah lewat form di kartu Area parkir.</p>'; return; }
     $('pkRows').innerHTML = cfg.slots.map((s, i) => `
       <div class="pk-row" data-id="${s.id}">
         <span class="pk-row-name">Slot ${i + 1}</span>
         <input class="pk-in-pin" list="pkPins" value="${esc(s.pin)}" maxlength="8" spellcheck="false" autocomplete="off" aria-label="Pin slot ${i + 1}">
         <input class="pk-in-code" type="number" min="1" max="99" value="${s.code}" aria-label="Kode kirim slot ${i + 1}">
-        <button type="button" class="pk-del" aria-label="Hapus slot ${i + 1}" title="Hapus slot ${i + 1}" ${cfg.slots.length <= 1 ? 'disabled' : ''}>✕</button>
+        <button type="button" class="pk-del" aria-label="Hapus slot ${i + 1}" title="Hapus slot ${i + 1}">✕</button>
       </div>`).join('');
   }
   function refreshPreview() {
@@ -5505,6 +5527,7 @@ document.getElementById('tmModelUrl')?.addEventListener('keydown', e => {
     const list = cfg.slots.filter((s) => /^P\d+$/i.test(s.pin));
     let c = '// Smart Parking: kirim status sensor tiap pin ke aplikasi\n';
     c += 'bluetooth.startUartService()\n';
+    if (!list.length) c += '// (belum ada slot, tambah slot di aplikasi lalu salin ulang kode ini)\n';
     list.forEach((s, i) => { c += `let s${i} = -1\n`; });
     c += '\n// kirim ulang semua status begitu aplikasi tersambung\n';
     c += 'bluetooth.onBluetoothConnected(function () {\n';
@@ -5528,10 +5551,6 @@ document.getElementById('tmModelUrl')?.addEventListener('keydown', e => {
 
   /* ---------- event ---------- */
   function deleteSlotById(id) {
-    if (cfg.slots.length <= 1) {
-      toast('Minimal 1 slot', 'Parkir harus punya setidaknya satu slot.');
-      return;
-    }
     const idx = cfg.slots.findIndex((x) => x.id === id);
     if (idx < 0) return;
     const [rm] = cfg.slots.splice(idx, 1);
